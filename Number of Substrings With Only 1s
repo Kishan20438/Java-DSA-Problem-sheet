@@ -1,0 +1,73 @@
+
+Problem :-
+Given a binary string s, return the number of substrings with all characters 1's. Since the answer may be too large, return it modulo 109 + 7.
+
+Example 1:
+
+Input: s = "0110111"
+Output: 9
+Explanation: There are 9 substring in total with only 1's characters.
+"1" -> 5 times.
+"11" -> 3 times.
+"111" -> 1 time.
+
+Example 2:
+
+Input: s = "101"
+Output: 2
+Explanation: Substring "1" is shown 2 times in s.
+
+Example 3:
+
+Input: s = "111111"
+Output: 21
+Explanation: Each substring contains only 1's characters.
+ 
+Constraints:
+
+1 <= s.length <= 105
+s[i] is either '0' or '1'.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution :-
+
+💡 Intuition:-
+The goal is to count all contiguous substrings that consist solely of '1's in the given string.
+For each '1' encountered, the number of valid substrings ending at that position is equal to the count of consecutive '1's up to that point.
+By using a sliding window approach, we can efficiently keep track of this count.
+Whenever we encounter a '0', we reset our count since the substring cannot continue.
+The total number of substrings can then be obtained by summing the contributions of all consecutive '1's found in the string.
+
+🔥 Approach :-
+Initialization: Start with two variables: cnt to track the number of consecutive '1's and total to accumulate the total count of valid substrings.
+Iteration: Loop through each character in the string:
+If the character is '1', increment the cnt.
+If the character is '0', reset cnt to zero since the substring cannot continue.
+Use modular addition function to safely add the current count of substrings to total, ensuring to take modulo (10^9 + 7) to prevent overflow.
+Return the total: At the end of the loop, return the accumulated value of total.
+
+🕒 Complexity :-
+Time complexity: O(n)
+Space complexity: O(1)
+
+Code :-
+ class Solution {
+    public int numSub(String s) {
+        final int MOD = 1_000_000_007;
+        long result = 0;
+        long count = 0;
+
+        for (char c : s.toCharArray()) {
+            if (c == '1') {
+                count++; // extend current block of 1s
+                result = (result + count) % MOD;
+            } else {
+                count = 0; // reset when encountering 0
+            }
+        }
+
+        return (int) result;
+    }
+}
+
