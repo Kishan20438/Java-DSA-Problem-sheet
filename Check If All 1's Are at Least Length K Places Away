@@ -1,0 +1,69 @@
+
+1437 Problem :-
+
+Given an binary array nums and an integer k, return true if all 1's are at least k places away from each other, otherwise return false.
+
+Example 1:
+Input: nums = [1,0,0,0,1,0,0,1], k = 2
+Output: true
+Explanation: Each of the 1s are at least 2 places away from each other.
+
+Example 2:
+Input: nums = [1,0,0,1,0,1], k = 2
+Output: false
+Explanation: The second 1 and third 1 are only one apart from each other.
+ 
+Constraints:
+
+1 <= nums.length <= 105
+0 <= k <= nums.length
+nums[i] is 0 or 1
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution :-
+
+Intuition
+Two 1s must be separated by at least k zeros.
+That means:
+number of elements between them (i - prev - 1) >= k
+So the intuition is:
+Keep track of the last position where a 1 was found.
+Every time a new 1 appears, check if the gap satisfies the requirement.
+If the gap is too small, the condition fails.
+This is simply a single pass comparison of distances between consecutive 1s.
+
+Approach
+The function checks whether all 1s in the binary array nums are at least k places apart.
+To do this, it:
+Scans the array from left to right.
+Records the index of the previous 1 found.
+For each new 1 encountered, it computes the distance (i − previous_index − 1).
+If the distance is less than k, it returns false.
+Otherwise, it updates previous_index and continues scanning.
+
+Complexity
+Time complexity:
+O(n)
+
+Space complexity:
+O(1)
+
+Code :-
+class Solution {
+    public boolean kLengthApart(int[] nums, int k) {
+        int lastIndex = -1;
+
+        for (int i = 0; i < nums.length; i++) {
+
+            if (nums[i] == 1) {
+                if (lastIndex != -1 && i - lastIndex - 1 < k) {
+                    return false;
+                }
+                lastIndex = i;
+            }
+        }
+
+        return true;
+    }
+}
