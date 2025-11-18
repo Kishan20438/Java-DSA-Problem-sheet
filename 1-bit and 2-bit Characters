@@ -1,0 +1,77 @@
+
+717 Problem :-
+We have two special characters:
+
+The first character can be represented by one bit 0.
+The second character can be represented by two bits (10 or 11).
+Given a binary array bits that ends with 0, return true if the last character must be a one-bit character.
+
+Example 1:
+
+Input: bits = [1,0,0]
+Output: true
+Explanation: The only way to decode it is two-bit character and one-bit character.
+So the last character is one-bit character.
+
+Example 2:
+
+Input: bits = [1,1,1,0]
+Output: false
+Explanation: The only way to decode it is two-bit character and two-bit character.
+So the last character is not one-bit character.
+ 
+Constraints:
+
+1 <= bits.length <= 1000
+bits[i] is either 0 or 1.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution :-
+
+Intuition :-
+It took me more than 10 minutes to understand what the question wants.
+In fact, there are only 3 valid segments, i.e. "0", "10", "11", in the input bits. The question wants to know whether the last valid segment is "0".
+Implementation: C, C++, Python, Java, Rust
+Add a C++ greedy 1-liner
+
+Approach :-
+The coding needs below 2 mins.
+let n=|bits|
+let i=0
+
+Proceed the loop
+for(; i<n-1; i++){ // Proceed the loop from i=0 to n-2
+    if(bits[i]==1) i++; // the valid segment "10" or "11"
+}
+// if the last  valid segment is "10" or "11" i==n otherwise i==n-1
+return i==n-1; 
+Add Python code without branches.
+Add C code
+Add Java code
+Add Rust code
+Thanks to @nodeforce, add a Greedy C++ 1-liner in which std::find with reverse iterator is in use.
+Real RUN for testcase
+For better understanding what the question really wants, let's consider the following custome testcase bits=[1,0,0,1,1,0,1,0, 0, 1, 1, 0, 0]
+The valid segments received are in following
+[1, 0][0][1, 1][0][1, 0][0][1, 1][0][0]
+
+Complexity :-
+
+Time complexity:
+O(n)
+Space complexity:
+O(1)
+
+Code :-
+
+class Solution {
+    public boolean isOneBitCharacter(int[] bits) {
+        int n = bits.length;
+        if (n >= 2 && bits[n - 2] == 0) return true;
+        int i = 0;
+        while(i < n - 1)
+            i += bits[i] + 1;
+        return i == n - 1;
+    }
+}
