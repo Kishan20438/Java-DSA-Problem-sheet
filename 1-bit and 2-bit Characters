@@ -20,7 +20,7 @@ Output: false
 Explanation: The only way to decode it is two-bit character and two-bit character.
 So the last character is not one-bit character.
  
-Constraints:
+Constraints:-
 
 1 <= bits.length <= 1000
 bits[i] is either 0 or 1.
