@@ -1,0 +1,132 @@
+
+757 Problem :-
+
+You are given a 2D integer array intervals where intervals[i] = [starti, endi] represents all the integers from starti to endi inclusively.
+A containing set is an array nums where each interval from intervals has at least two integers in nums.
+For example, if intervals = [[1,3], [3,7], [8,9]], then [1,2,4,7,8,9] and [2,3,4,8,9] are containing sets.
+Return the minimum possible size of a containing set.
+
+Example 1:
+Input: intervals = [[1,3],[3,7],[8,9]]
+Output: 5
+Explanation: let nums = [2, 3, 4, 8, 9].
+It can be shown that there cannot be any containing array of size 4.
+
+Example 2:
+Input: intervals = [[1,3],[1,4],[2,5],[3,5]]
+Output: 3
+Explanation: let nums = [2, 3, 4].
+It can be shown that there cannot be any containing array of size 2.
+
+Example 3:
+Input: intervals = [[1,2],[2,3],[2,4],[4,5]]
+Output: 5
+Explanation: let nums = [1, 2, 3, 4, 5].
+It can be shown that there cannot be any containing array of size 4.
+ 
+Constraints:
+1 <= intervals.length <= 3000
+intervals[i].length == 2
+0 <= starti < endi <= 108
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Solution :-
+
+Intuition :-
+
+To minimize the number of chosen integers, we should try to reuse previously chosen integers for as many future intervals as possible. That suggests:
+Process intervals in increasing order of their right endpoint (end). Intervals that end earlier are more restrictive and should be satisfied first.
+When we need to add integers for the current interval, choose them as large as possible (preferably at the interval's end and end−1). Why large? Because those points are likelier to belong to upcoming intervals which start later but may still include those end points — so you maximize reuse.
+A small but important tie-breaker when sorting: if two intervals have the same end, process the one with larger start first (i.e., sort by end ascending, start descending). This avoids wasting picks on a wide interval before a narrower one with the same end.
+We keep track of the last two chosen integers (call them x and y, with x < y) that are the two largest chosen so far. For each interval [a, b]:
+If both x and y are in [a, b], nothing to do.
+If only y is in [a, b], we need one more integer — choose b (the interval's end).
+If neither x nor y are in [a, b], we need two integers — choose b-1 and b.
+Choosing b and b-1 (the two largest possible numbers inside the interval) is optimal for reuse.
+
+Approach:- 
+
+1. Sort the intervals
+  Sort all intervals by:
+  Ending point end ascending
+  If end is same → start descending
+  This ensures
+  You always satisfy the tightest interval first.
+  If two intervals end at same point, you satisfy the narrower first so you don't waste numbers.
+
+2. Keep track of the last two chosen points
+Maintain two values:-
+  x = 2nd largest chosen number
+  y = largest chosen number
+  These are the most "useful" points for future intervals.
+
+3. For each interval [a, b], check how many of our existing chosen points lie inside it
+  Case A — Both x and y already inside [a, b]
+  → Interval is already satisfied
+  → Do nothing.
+
+  Case B — Only y inside [a, b]
+  → We need 1 more number
+  Pick the largest possible number, which is:
+  Update:
+  x = y
+  y = b
+  Case C — Neither in [a, b]
+  → We must pick two numbers
+  Pick the two largest possible numbers inside the interval:
+  b-1  and  b
+  Update:
+  x = b-1
+  y = b
+  This greedy choice keeps the picks as right as possible so they can satisfy many upcoming intervals.
+
+ Visual representation
+
+ Intervals:-
+ [1,3], [1,4], [2,5], [3,5]
+ Sort by end then start descending → [1,3], [1,4], [3,5], [2,5] (for illustration — actual order by rules).
+
+**Process:- 
+
+[1,3]: no chosen points yet → choose 2,3. chosen = {2,3}
+[1,4]: both 2 and 3 are inside [1,4] → nothing to do.
+[3,5]: only 3 is inside → need one more → choose 5. chosen = {2,3,5}
+[2,5]: 3 and 5 are inside → nothing to do.
+Result: chosen set size = 3 (for this example).
+
+(You can draw intervals on a number line and mark chosen points to see overlap visually.)
+
+Complexity :-
+Sorting: O(n log n) for n intervals.
+Single linear pass after sort: O(n).
+Total time: O(n log n).
+Space: O(1) extra (ignoring input storage), because we only track two most recent chosen points and a count.
+
+Code :-
+
+class Solution {
+    public int intersectionSizeTwo(int[][] intervals) {
+        Arrays.sort(intervals, (a, b) -> 
+            a[1] == b[1] ? b[0] - a[0] : a[1] - b[1]
+        );
+
+        int ans = 0;
+        int a = -1, b = -1;
+
+        for (int[] it : intervals) {
+            int l = it[0], r = it[1];
+
+            if (l > b) {
+                a = r - 1;
+                b = r;
+                ans += 2;
+            } else if (l > a) {
+                a = b;
+                b = r;
+                ans += 1;
+            }
+        }
+
+        return ans;
+    }
+}
