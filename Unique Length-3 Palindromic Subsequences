@@ -1,0 +1,125 @@
+
+1930 Problem :-
+
+Given a string s, return the number of unique palindromes of length three that are a subsequence of s.
+Note that even if there are multiple ways to obtain the same subsequence, it is still only counted once.
+A palindrome is a string that reads the same forwards and backwards.
+A subsequence of a string is a new string generated from the original string with some characters (can be none) deleted without changing the relative order of the remaining characters.
+For example, "ace" is a subsequence of "abcde".
+
+Example 1:
+Input: s = "aabca"
+Output: 3
+Explanation: The 3 palindromic subsequences of length 3 are:
+- "aba" (subsequence of "aabca")
+- "aaa" (subsequence of "aabca")
+- "aca" (subsequence of "aabca")
+
+Example 2:
+Input: s = "adc"
+Output: 0
+Explanation: There are no palindromic subsequences of length 3 in "adc".
+
+Example 3:
+Input: s = "bbcbaba"
+Output: 4
+Explanation: The 4 palindromic subsequences of length 3 are:
+- "bbb" (subsequence of "bbcbaba")
+- "bcb" (subsequence of "bbcbaba")
+- "bab" (subsequence of "bbcbaba")
+- "aba" (subsequence of "bbcbaba")
+ 
+Constraints:-
+3 <= s.length <= 105
+s consists of only lowercase English letters.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Solution :-
+
+Intuition:-
+A palindromic subsequence of length 3 looks like:
+a _ a
+So, a character appears on the left side, the middle, and again on the right side.
+For each possible middle character b at position j, we need to know:
+Which characters appear before j?
+Which characters appear after j?
+If the same character a appears on both sides of j, then a b a is a valid palindromic subsequence.
+We only want to count distinct palindromic subsequences.
+For example, "ababa" contains many a b a subsequences, but they should be counted only once.
+To solve this efficiently:
+Use bitmasks to store which characters appear to the left and right.
+For every index as the middle character, intersect these bitmasks.
+Mark used[a][middle] = true so duplicates are avoided.
+
+Approach:-
+Step 1: Build a suffix mask
+suf[i] tells what characters appear from index i to the end.
+We build it from right to left:
+for i = n-1 → 0:
+    mask |= (1 << (s[i] - 'a'))
+    suf[i] = mask
+Step 2: Iterate each position as middle character
+Maintain a running prefix mask (leftMask) that stores characters before j.
+For each middle index j from 1 to n-2:
+
+1.Update prefix:
+leftMask |= 1 << (s[j-1] - 'a')
+2. Intersect left and right masks:
+both = leftMask & suf[j+1]
+3. For every character c present in both:
+This means c s[j] c is a valid palindrome.
+Mark: used[c][mid] = true to avoid duplicates.
+Step 3: Count unique pairs
+Simply count how many (a, b) combinations were marked true.
+
+Time complexity :-
+O(26 * n) = O(n)
+Suffix mask creation: O(n)
+Middle index loop: O(n)
+Each iteration checks 26 letters → 26 * n
+Final double loop: 26 × 26 = constant
+So overall time complexity is linear O(n).
+
+Space complexity:-
+O(n + 26×26) = O(n)
+suf[] array of size n
+used[26][26] = constant
+Prefix/suffix masks = constant
+SO total space is O(n).
+
+Code:-
+
+class Solution {
+    public int countPalindromicSubsequence(String s) {
+         int n = s.length();
+        int[] first = new int[26];
+        int[] last = new int[26];
+        Arrays.fill(first, n);
+        Arrays.fill(last, -1);
+
+        for (int i = 0; i < n; i++) {
+            int c = s.charAt(i) - 'a';
+            first[c] = Math.min(first[c], i);
+            last[c] = i;
+        }
+
+        int res = 0;
+
+        for (int c = 0; c < 26; c++) {
+            int L = first[c];
+            int R = last[c];
+            if (R - L < 2) continue;
+            boolean[] memo = new boolean[26];
+
+            for (int i = L + 1; i < R; i++) {
+                int idx = s.charAt(i) - 'a';
+                if (!memo[idx]) {
+                    memo[idx] = true;
+                    res++;
+                }
+            }
+        }
+
+        return res;
+    }
+}
