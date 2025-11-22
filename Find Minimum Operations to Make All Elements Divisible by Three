@@ -1,0 +1,63 @@
+
+3190 Problem:-
+
+You are given an integer array nums. In one operation, you can add or subtract 1 from any element of nums.
+
+Return the minimum number of operations to make all elements of nums divisible by 3.
+
+Example 1:-
+Input: nums = [1,2,3,4]
+Output: 3
+
+Explantion:-
+All array elements can be made divisible by 3 using 3 operations:
+Subtract 1 from 1.
+Add 1 to 2.
+Subtract 1 from 4.
+
+Example 2:-
+Input: nums = [3,6,9]
+Output: 0
+
+Constraints:-
+1 <= nums.length <= 50
+1 <= nums[i] <= 50
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution :-
+
+Intuition:-
+To make a number divisible by 3, we only care about its remainder when divided by 3:
+If a number is already divisible by 3 → no operation is needed.
+If a number has remainder 1, we can subtract 1 to reach a multiple of 3.
+If a number has remainder 2, we can add 1 to reach a multiple of 3.
+In both cases (remainder 1 or 2), only one operation is needed.
+Thus, each number that is not divisible by 3 contributes exactly 1 to the total operations.
+Therefore, the total minimum operations is simply the count of numbers not divisible by 3.
+
+Approach:-
+Initialize a counter ans = 0.
+Loop through each element in the array:
+Compute nums[i] % 3.
+If the result is not 0, increment ans because we need exactly one operation for this number.
+Return ans as the minimum number of operations required.
+
+Complexity:-
+Time complexity:
+O(n)
+
+Space complexity:-
+O(1)
+
+Code:-
+
+class Solution {
+    public int minimumOperations(int[] nums) {
+        int res = 0;
+        for (int num : nums) {
+            if (num % 3 != 0) res++;
+        }
+        return res;
+    }
+}
