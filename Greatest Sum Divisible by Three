@@ -1,0 +1,95 @@
+
+1262 Problem:-
+Given an integer array nums, return the maximum possible sum of elements of the array such that it is divisible by three.
+
+Example 1:
+Input: nums = [3,6,5,1,8]
+Output: 18
+Explanation: Pick numbers 3, 6, 1 and 8 their sum is 18 (maximum sum divisible by 3).
+
+Example 2:
+Input: nums = [4]
+Output: 0
+Explanation: Since 4 is not divisible by 3, do not pick any number.
+
+Example 3:
+Input: nums = [1,2,3,4,4]
+Output: 12
+Explanation: Pick numbers 1, 3, 4 and 4 their sum is 12 (maximum sum divisible by 3).
+ 
+Constraints:
+1 <= nums.length <= 4 * 104
+1 <= nums[i] <= 104
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution:-
+
+Approach
+I calculate the total sum of all numbers.
+At the same time, I keep track of:
+The two smallest numbers whose num % 3 == 1.
+The two smallest numbers whose num % 3 == 2.
+I only need two of each because the worst case is removing two numbers.
+After processing all numbers:
+If sum % 3 == 0, I simply return sum.
+If sum % 3 == 1:
+
+Option A: remove the smallest remainder-1 number.
+Option B: remove the sum of the two smallest remainder-2 numbers.
+I pick the smaller of these two options (minimum loss).
+If sum % 3 == 2:
+
+Option A: remove the smallest remainder-2 number.
+Option B: remove the sum of the two smallest remainder-1 numbers.
+Again, I pick the smaller option.
+If an option is impossible (e.g., I don’t have two remainder-2 numbers), I treat its cost as “infinity” (a huge number) so it never gets chosen.
+The answer is sum - best_removal.
+If no valid removal exists, the result becomes negative, so I just return 0 (meaning I pick nothing, sum = 0, which is divisible by 3).
+This uses just a few variables and a single pass over the array.
+
+Code :-
+class Solution {
+    public int maxSumDivThree(int[] nums) {
+        long sum = 0;
+        int INF = (int)1e9;
+        int r1_min1 = INF, r1_min2 = INF;
+        int r2_min1 = INF, r2_min2 = INF;
+
+        for (int x : nums) {
+            sum += x;
+            int r = x % 3;
+            if (r == 1) {
+                if (x < r1_min1) {
+                    r1_min2 = r1_min1;
+                    r1_min1 = x;
+                } else if (x < r1_min2) {
+                    r1_min2 = x;
+                }
+            } else if (r == 2) {
+                if (x < r2_min1) {
+                    r2_min2 = r2_min1;
+                    r2_min1 = x;
+                } else if (x < r2_min2) {
+                    r2_min2 = x;
+                }
+            }
+        }
+
+        int mod = (int)(sum % 3);
+        if (mod == 0) return (int)sum;
+
+        long removeCost = (long)1e18;
+
+        if (mod == 1) {
+            if (r1_min1 != INF) removeCost = Math.min(removeCost, (long)r1_min1);
+            if (r2_min2 != INF) removeCost = Math.min(removeCost, (long)r2_min1 + r2_min2);
+        } else {
+            if (r2_min1 != INF) removeCost = Math.min(removeCost, (long)r2_min1);
+            if (r1_min2 != INF) removeCost = Math.min(removeCost, (long)r1_min1 + r1_min2);
+        }
+
+        if (removeCost >= (long)1e18) return 0;
+        return (int)(sum - removeCost);
+    }
+}
