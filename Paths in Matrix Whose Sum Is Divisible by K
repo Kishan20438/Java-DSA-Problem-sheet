@@ -1,0 +1,115 @@
+
+2435 Problem:-
+
+You are given a 0-indexed m x n integer matrix grid and an integer k. You are currently at position (0, 0) and you want to reach position (m - 1, n - 1) moving only down or right.
+Return the number of paths where the sum of the elements on the path is divisible by k. Since the answer may be very large, return it modulo 109 + 7.
+
+Example 1:
+Input: grid = [[5,2,4],[3,0,5],[0,7,2]], k = 3
+Output: 2
+Explanation: There are two paths where the sum of the elements on the path is divisible by k.
+The first path highlighted in red has a sum of 5 + 2 + 4 + 5 + 2 = 18 which is divisible by 3.
+The second path highlighted in blue has a sum of 5 + 3 + 0 + 5 + 2 = 15 which is divisible by 3.
+
+Example 2:
+Input: grid = [[0,0]], k = 5
+Output: 1
+Explanation: The path highlighted in red has a sum of 0 + 0 = 0 which is divisible by 5.
+
+Example 3:
+Input: grid = [[7,3,4,9],[2,3,6,2],[2,3,7,0]], k = 1
+Output: 10
+Explanation: Every integer is divisible by 1 so the sum of the elements on every possible path is divisible by k.
+ 
+Constraints:
+m == grid.length
+n == grid[i].length
+1 <= m, n <= 5 * 104
+1 <= m * n <= 5 * 104
+0 <= grid[i][j] <= 100
+1 <= k <= 50
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution:-
+
+Intuition
+Instead of tracking the exact sum for every path (which becomes huge), we only need the remainder when divided by k.
+💡 Why?
+If you know the sum so far has remainder r (sum % k = r), and you add a new value v, the new remainder becomes:
+new_remainder = (r + v) % k
+So for every cell, we don’t store full sums — only how many paths reach this cell with each remainder (0 to k-1).
+
+Approach
+We use Dynamic Programming (DP):
+
+Define:
+dp[i][j][r] = number of paths to cell (i,j) that have sum % k = r
+DP Transition
+To reach (i,j), you can come from:
+(i-1, j) → from top
+(i, j-1) → from left
+For each remainder r_prev in previous cell:
+r_new = (r_prev + grid[i][j]) % k
+dp[i][j][r_new] += dp[previous][r_prev]
+Base Case
+At the starting cell:
+dp[0][0][ grid[0][0] % k ] = 1
+
+Final Answer
+dp[m-1][n-1][0]   # paths whose total sum is divisible by k
+VISUAL REPRESENTATION
+Suppose:
+Grid:
+1 2
+3 4
+k = 3
+Step 1 — Start
+At (0,0) = 
+remainder = 1 % 3 = 1
+dp[0][0] = [0, 1, 0]   # remainder 0 → 0 paths, remainder 1 → 1 path, remainder 2 → 0 paths
+Step 2 — First row
+Move right → add 2
+(1 + 2) % 3 = 0
+dp[0][1] = [1, 0, 0]
+Step 3 — First column
+Move down from start → add 3
+(1 + 3) % 3 = 1
+dp[1][0] = [0, 1, 0]
+Step 4 — Final cell (1,1) = 4
+
+There are 2 ways to reach it:
+Right → Down : (1 + 2 + 4) % 3 = 1
+Down → Right : (1 + 3 + 4) % 3 = 2
+Count of remainders:
+dp[1][1] = [0, 1, 1]
+🟢 Final answer = dp[1][1][0] = 0
+(No path sum is divisible by 3)
+
+Complexity:-
+Time complexity: O(m × n × k) — for each cell we update k remainders
+Space complexity: O(m × n × k) (3-D DP)
+
+Code :-
+class Solution {
+    public int numberOfPaths(int[][] grid, int k) {
+        Integer[][][] mem = new Integer[grid.length][grid[0].length][k];
+    return numberOfPaths(grid, 0, 0, 0, k, mem);
+  }
+
+  private static final int MOD = 1_000_000_007;
+
+  // Returns the number of paths to (i, j), where the sum / k == `sum`.
+  private int numberOfPaths(int[][] grid, int i, int j, int sum, int k, Integer[][][] mem) {
+    if (i == grid.length || j == grid[0].length)
+      return 0;
+    if (i == grid.length - 1 && j == grid[0].length - 1)
+      return (sum + grid[i][j]) % k == 0 ? 1 : 0;
+    if (mem[i][j][sum] != null)
+      return mem[i][j][sum];
+    final int newSum = (sum + grid[i][j]) % k;
+    return mem[i][j][sum] = (numberOfPaths(grid, i + 1, j, newSum, k, mem) +
+                             numberOfPaths(grid, i, j + 1, newSum, k, mem)) %
+                            MOD;
+    }
+}
