@@ -1,0 +1,75 @@
+
+3381 Problem:-
+
+You are given an array of integers nums and an integer k.
+Return the maximum sum of a subarray of nums, such that the size of the subarray is divisible by k.
+
+Example 1:
+Input: nums = [1,2], k = 1
+Output: 3
+Explanation:
+The subarray [1, 2] with sum 3 has length equal to 2 which is divisible by 1.
+
+Example 2:
+Input: nums = [-1,-2,-3,-4,-5], k = 4
+Output: -10
+Explanation:
+The maximum sum subarray is [-1, -2, -3, -4] which has length equal to 4 which is divisible by 4.
+
+Example 3:
+Input: nums = [-5,1,2,-3,4], k = 2
+
+Output: 4
+Explanation:
+The maximum sum subarray is [1, 2, -3, 4] which has length equal to 4 which is divisible by 2.
+
+Constraints:
+1 <= k <= nums.length <= 2 * 105
+-109 <= nums[i] <= 109
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution:-
+
+Approach
+let n=|nums|
+declare minS(k, LLONG_MAX/2) where minS[i%k]=the min of prefix sums up to indices r with the equivalent relation r%k=i%k; it's to note when r=r'(mod k) with r'>r prefix[r']-prefix[r] is the sum of the subarray nums[r+1..r'] with length of k-multiple.
+let prefix=0, ans=LLONG_MIN
+Set minS[k-1]=0. It's to note the 1st subarray with length k-multiple is nums[0..k-1]
+Proceed the loop
+for(int i=0; i<n; i++){
+    prefix+=nums[i];// add nums[i] to prefix
+    ll& ksum=minS[i%k]; // pass by reference
+    ans=max(ans, prefix-ksum); // subarray of length k-multiple
+    //take minS[i%k] as the min among prefix sum up to index r=i%k
+    ksum=min(prefix, ksum); 
+}
+return ans
+Add C code
+Add Python code
+Add Java
+
+Complexity
+Time complexity:
+O(n)
+Space complexity:
+O(k)
+
+Code:-
+
+class Solution {
+    public long maxSubarraySum(int[] nums, int k) {
+        final long n=nums.length, INF=Long.MAX_VALUE/2;
+        long [] minS=new long[k];
+        for(int i=0; i<k-1; i++) minS[i]=INF;
+        minS[k-1]=0;
+        long prefix=0, ans=-INF;
+        for(int i=0; i<n; i++){
+            prefix+=nums[i];
+            int ik=i%k;
+            ans=Math.max(ans, prefix-minS[ik]);
+            minS[ik]=Math.min(prefix, minS[ik]);  
+        }
+        return ans;
+    }
+}
