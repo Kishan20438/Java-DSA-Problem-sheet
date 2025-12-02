@@ -1,0 +1,71 @@
+
+3623 Problem :-
+You are given a 2D integer array points, where points[i] = [xi, yi] represents the coordinates of the ith point on the Cartesian plane.
+A horizontal trapezoid is a convex quadrilateral with at least one pair of horizontal sides (i.e. parallel to the x-axis). Two lines are parallel if and only if they have the same slope.
+Return the number of unique horizontal trapezoids that can be formed by choosing any four distinct points from points.
+Since the answer may be very large, return it modulo 109 + 7.
+
+Example 1:-
+Input: points = [[1,0],[2,0],[3,0],[2,2],[3,2]]
+Output: 3
+Explanation:-
+There are three distinct ways to pick four points that form a horizontal trapezoid:
+Using points [1,0], [2,0], [3,2], and [2,2].
+Using points [2,0], [3,0], [3,2], and [2,2].
+Using points [1,0], [3,0], [3,2], and [2,2].
+
+Example 2:-
+Input: points = [[0,0],[1,0],[0,1],[2,1]]
+Output: 1
+
+Explanation:-
+There is only one horizontal trapezoid that can be formed.
+
+Constraints:-
+4 <= points.length <= 105
+–108 <= xi, yi <= 108
+All points are pairwise distinct.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Solution :-
+
+Intuition
+A trapezoid (with parallel horizontal bases) is determined by two distinct x-coordinates x1 and x2, and two distinct rows (y-values) that both contain points at x1 and x2. So for every unordered pair (x1,x2) count how many rows contain that pair; if that count is k then that pair contributes C(k,2) trapezoids. We can accumulate trapezoids incrementally: whenever we see a pair (x1,x2) again, it contributes the current count of that pair to the answer.
+
+Approach:-
+Group points by their y coordinate (map y -> list of x).
+For each row (list of x), iterate over all unordered pairs (x1, x2) in that row.
+Maintain a map pairCount from a packed (x1,x2) key to how many rows have seen that pair so far.
+When processing a pair with current count c, add c to ans (because this new row pairs with each of those c previous rows to form c new trapezoids), then increment the stored count to c+1.
+Do all additions modulo 1e9+7.
+
+Complexity:-
+Time complexity: Let the rows have sizes s1, s2, .... Time is O(sum_i si^2) because we enumerate all pairs within each row.
+In worst-case (all points in one row) it’s O(n^2); typically points are spread, so this is fine for the constraints of the problem.
+Space complexity: O(P) where P is the number of distinct (x1,x2) pairs encountered (worst-case O(n^2)).
+
+Code:-
+
+class Solution {
+    public int countTrapezoids(int[][] points) {
+        long mod=1000000007L;
+        Map<Integer,Long> mapy=new HashMap<>();
+        for(int []row:points){
+            mapy.put(row[1],mapy.getOrDefault(row[1],0L)+1);
+        }
+        List<Long> height=new ArrayList<>();
+        for(long val:mapy.values()){
+            if(val>=2){
+                long ways=(val*(val-1))/2;
+                height.add(ways%mod);
+            }
+        }
+        long ans=0,sum=0;
+        for(long val:height){
+            ans=(ans+(val*sum)%mod)%mod;
+            sum=(sum+val)%mod;
+        }
+        return (int)ans;
+    }
+}
