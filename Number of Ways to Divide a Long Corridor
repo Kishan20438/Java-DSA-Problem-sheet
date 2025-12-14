@@ -1,0 +1,82 @@
+
+2147 Problem:-
+Along a long library corridor, there is a line of seats and decorative plants. You are given a 0-indexed string corridor of length n consisting of letters 'S' and 'P' where each 'S' represents a seat and each 'P' represents a plant.
+One room divider has already been installed to the left of index 0, and another to the right of index n - 1. Additional room dividers can be installed. For each position between indices i - 1 and i (1 <= i <= n - 1), at most one divider can be installed.
+Divide the corridor into non-overlapping sections, where each section has exactly two seats with any number of plants. There may be multiple ways to perform the division. Two ways are different if there is a position with a room divider installed in the first way but not in the second way.
+Return the number of ways to divide the corridor. Since the answer may be very large, return it modulo 109 + 7. If there is no way, return 0.
+
+Example 1:
+Input: corridor = "SSPPSPS"
+Output: 3
+Explanation: There are 3 different ways to divide the corridor.
+The black bars in the above image indicate the two room dividers already installed.
+Note that in each of the ways, each section has exactly two seats.
+
+Example 2:
+Input: corridor = "PPSPSP"
+Output: 1
+Explanation: There is only 1 way to divide the corridor, by not installing any additional dividers.
+Installing any would create some section that does not have exactly two seats.
+Example 3:
+Input: corridor = "S"
+Output: 0
+Explanation: There is no way to divide the corridor because there will always be a section that does not have exactly two seats.
+ 
+Constraints:
+n == corridor.length
+1 <= n <= 105
+corridor[i] is either 'S' or 'P'.
+
+========================================================================================================================================================================================
+
+Solution:-
+🔥 Observations
+As we know that each subarray must have exactly 2 S (seats) and the number of plants can be anything.
+Since each subarray must have exactly 2 seats, the total number of seats must be a multiple of 2, if not then an arrangement is not possible and we can simply return 0.
+For cases like the one above, we must realise that the plants at the start and at the end, have only one option to form a valid subarray.
+Plant at 1 can only join the subarray formed by seats [2, 3]
+Plant at 8 can only join the subarray formed by seats [6, 7].
+So we only need to worry about the plants placed in the region : [The right of 2 leftmost seats, The left of 2 seats rightmost seats]. Which in this case looks like the region in red in the image below.
+
+❓ Number of ways to place the bars?
+For every K plants placed, there are K + 1 ways to add a bar, as there are 3 options :
+The plants joins the right subarray :
+The plants join the left subarray :
+Each plant joins one subarray to the left & right :
+For the case of 4 plants in the middle, there would be 5 rods, as shown in the image below,
+So its trivial to observe here that only the number of dividers in the middle keep increasing by 1 for each plant we add.
+Therefore, the number of dividers = number of plants + 1
+
+For example,
+If there is 1 plant, there are 2 possible divider positions.
+If there are 2 plants, there are 3 possible divider positions, and so on.
+Since the choice of divider position in each such gap is independent of the others, the total number of ways is the product of the number of divider positions for all gaps.
+Question.) Why do we take their product?
+This is basically the equivalent to a simple combinatorics problem, What are the number of ways to give 5 distinct gifts to 3 children?
+As each child as 5 ways to receive a gift, the number of ways are 5 * 5 * 5 = 125 ways.
+So for the case below,
+
+We can simply take the product of ways to place dividers of each gap to get our final result.
+The last trivial observation is that : The distance between the first seats of two consecutive seat pairs = Number of dividers between them.
+Therefore, for each consecutive pair group of seats, we only need to consider the distance between the first seat of the current pair and the first seat of the next pair and return the product of all such pair-wise differences.
+
+Code:-
+
+class Solution {
+    public int numberOfWays(String corridor) {
+        int mod = 1_000_000_007;
+        long s0 = 0, s1 = 0, s2 = 1;
+
+        for (char c : corridor.toCharArray()) {
+            if (c == 'S') {
+                long t = s1;
+                s1 = s2;
+                s2 = t;
+                s0 = t;
+            } else {
+                s2 = (s2 + s0) % mod;
+            }
+        }
+        return (int) s0;
+    }
+}
