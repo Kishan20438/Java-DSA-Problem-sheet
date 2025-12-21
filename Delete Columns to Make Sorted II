@@ -1,0 +1,135 @@
+
+955 Problem:-
+You are given an array of n strings strs, all of the same length.
+We may choose any deletion indices, and we delete all the characters in those indices for each string.
+For example, if we have strs = ["abcdef","uvwxyz"] and deletion indices {0, 2, 3}, then the final array after deletions is ["bef", "vyz"].
+Suppose we chose a set of deletion indices answer such that after deletions, the final array has its elements in lexicographic order (i.e., strs[0] <= strs[1] <= strs[2] <= ... <= strs[n - 1]). Return the minimum possible value of answer.length.
+
+Example 1:-
+Input: strs = ["ca","bb","ac"]
+Output: 1
+Explanation: 
+After deleting the first column, strs = ["a", "b", "c"].
+Now strs is in lexicographic order (ie. strs[0] <= strs[1] <= strs[2]).
+We require at least 1 deletion since initially strs was not in lexicographic order, so the answer is 1.
+
+Example 2:-
+Input: strs = ["xc","yb","za"]
+Output: 0
+Explanation: 
+strs is already in lexicographic order, so we do not need to delete anything.
+Note that the rows of strs are not necessarily in lexicographic order:
+i.e., it is NOT necessarily true that (strs[0][0] <= strs[0][1] <= ...)
+
+Example 3:-
+Input: strs = ["zyx","wvu","tsr"]
+Output: 3
+Explanation: We have to delete every column.
+ 
+Constraints:-
+n == strs.length
+1 <= n <= 100
+1 <= strs[i].length <= 100
+strs[i] consists of lowercase English letters.
+
+========================================================================================================================================================================================
+Solution:-
+
+Intuition:-
+Imagine you're reading strings from top to bottom, column by column. You want to keep as many columns as possible. The trick is: once you find a column where one string is "smaller" than the next, you don't need to worry about those two strings anymore - their order is already decided! You only delete a column if it would mess up strings that don't have a decided order yet.
+Think of it like sorting names: If you see "Alice" and "Bob", you already know Alice comes first (because 'A' < 'B'). You don't need to check the rest of their letters!
+
+Approach:-
+Let's walk through with an example: ["xga", "xfb", "yfa"]
+We need to check 2 adjacent pairs: (row 0, row 1) and (row 1, row 2)
+Column 0 (index 0): 'x', 'x', 'y'
+Pair 0-1: "x" vs "x" → Equal, not settled yet ⏸️
+Pair 1-2: "x" vs "y" → x < y ✅ (Pair 1-2 is now SETTLED!)
+Keep this column
+Settled pairs: [false, true]
+Deletions = 0
+Column 1 (index 1): 'g', 'f', 'f'
+Pair 0-1: NOT settled yet, so check → "g" vs "f" → g > f ❌ (Wrong order!)
+We must DELETE this column (don't check pair 1-2 since we found violation)
+Settled pairs: [false, true] (unchanged)
+Deletions = 1
+Column 2 (index 2): 'a', 'b', 'a'
+Pair 0-1: NOT settled yet, so check → "a" vs "b" → a < b ✅ (Pair 0-1 is now SETTLED!)
+Pair 1-2: Already SETTLED from column 0, skip checking ⏭️
+Keep this column
+Settled pairs: [true, true]
+Deletions = 1
+Result: 1 deletion needed (we deleted column 1)
+
+Algorithm Steps:-
+Keep a sorted array to track which adjacent pairs of strings already have a definite order
+For each column:
+Make a temporary copy assuming we'll keep it
+Check each pair of adjacent strings:
+If pair is already settled (sorted[j] = true), skip it
+If current char is greater than next (violation), delete column
+If current char is less than next, mark this pair as settled
+If no violations, keep the column and update settled pairs
+
+Complexity:-
+Time complexity: O(m×n)
+Where m is the number of strings and n is the length of each string
+We process each character once with constant work per character
+Space complexity: O(m)
+We maintain a boolean array of size m-1 to track settled pairs
+The temporary clone array also takes O(m) space
+
+Code:-
+class Solution {
+    public int minDeletionSize(String[] strs) {
+        int n = strs.length;
+        int m = strs[0].length();
+
+        // Convert strings to char arrays once
+        // This avoids repeated charAt() calls inside nested loops
+        char[][] a = new char[n][];
+        for (int i = 0; i < n; i++) {
+            a[i] = strs[i].toCharArray();
+        }
+
+        // resolved[i] = true means:
+        // strs[i] is already strictly smaller than strs[i+1]
+        // considering previously kept columns
+        boolean[] resolved = new boolean[n - 1];
+
+        // Number of adjacent row pairs whose order is still undecided
+        int unresolved = n - 1;
+
+        int deletions = 0;
+
+        // Process columns left to right
+        for (int col = 0; col < m && unresolved > 0; col++) {
+            boolean needDelete = false;
+
+            // Check if keeping this column breaks lexicographical order
+            for (int row = 0; row < n - 1; row++) {
+                // Only compare rows whose order is not yet fixed
+                if (!resolved[row] && a[row][col] > a[row + 1][col]) {
+                    needDelete = true;
+                    break;
+                }
+            }
+
+            // If this column violates order, delete it
+            if (needDelete) {
+                deletions++;
+                continue;
+            }
+
+            // Otherwise, update which row pairs become strictly ordered
+            for (int row = 0; row < n - 1; row++) {
+                if (!resolved[row] && a[row][col] < a[row + 1][col]) {
+                    resolved[row] = true;
+                    unresolved--;
+                }
+            }
+        }
+
+        return deletions;
+    }
+}
