@@ -1,0 +1,77 @@
+
+3074 Problem:-
+You are given an array apple of size n and an array capacity of size m.
+There are n packs where the ith pack contains apple[i] apples. There are m boxes as well, and the ith box has a capacity of capacity[i] apples.
+Return the minimum number of boxes you need to select to redistribute these n packs of apples into boxes.
+Note that, apples from the same pack can be distributed into different boxes.
+
+Example 1:-
+Input: apple = [1,3,2], capacity = [4,3,1,5,2]
+Output: 2
+Explanation: We will use boxes with capacities 4 and 5.
+It is possible to distribute the apples as the total capacity is greater than or equal to the total number of apples.
+
+Example 2:-
+Input: apple = [5,5,5], capacity = [2,4,2,7]
+Output: 4
+Explanation: We will need to use all the boxes.
+ 
+Constraints:-
+1 <= n == apple.length <= 50
+1 <= m == capacity.length <= 50
+1 <= apple[i], capacity[i] <= 50
+The input is generated such that it's possible to redistribute packs of apples into boxes.
+
+========================================================================================================================================================================================
+
+Solution:-
+
+Greedy Approach | Sorting
+We need to pack all apples into the minimum number of boxes.
+Since apples can be split across boxes, this becomes a simple optimization problem.
+The optimal strategy is to use the largest boxes first.
+By prioritizing larger capacities, we minimize the total number of boxes needed.
+Why does this work?
+If we need to pack n apples total, using bigger boxes means we reach that target with fewer selections.
+
+Procedure:-
+Calculate total apples needed
+Sort boxes by capacity in descending order
+Then, greedily select boxes until all apples are packed
+Start with the largest box
+Subtract its capacity from remaining apples
+Continue until there are no apples left
+Finally, count the boxes used
+
+Time Complexity: O(n+mlogm)
+Space Complexity: O(1)
+Counting Sort
+Counting sort is arguably better due to its linear complexity, but since the number of boxes and their capacities is small, its performance may be have no difference or even slightly worse than a standard sort especially when the frequencies are sparse:
+Time Complexity: O(n+m)
+Space Complexity: O(k)class Solution {
+    public int minimumBoxes(int[] apple, int[] cap) {
+        int sum = Arrays.stream(apple).sum();
+
+        int[] fq = new int[51];
+        int high = 0, low = 51;
+        for (int c : cap) {
+            fq[c]++;
+            high = Math.max(high, c);
+            low = Math.min(low, c);
+        }
+
+        int res = 0;
+        for (int i = high; i >= low && sum > 0; i--) {
+            while (fq[i]-- > 0 && sum > 0) {
+                sum -= i;
+                res++;
+            }
+        }
+
+        return res;
+    }
+}
+
+
+Code:-
+
