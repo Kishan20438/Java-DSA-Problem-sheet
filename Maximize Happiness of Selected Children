@@ -1,0 +1,77 @@
+
+3075 Problem:-
+You are given an array happiness of length n, and a positive integer k.
+There are n children standing in a queue, where the ith child has happiness value happiness[i]. You want to select k children from these n children in k turns.
+In each turn, when you select a child, the happiness value of all the children that have not been selected till now decreases by 1. Note that the happiness value cannot become negative and gets decremented only if it is positive.
+Return the maximum sum of the happiness values of the selected children you can achieve by selecting k children.
+
+Example 1:-
+Input: happiness = [1,2,3], k = 2
+Output: 4
+Explanation: We can pick 2 children in the following way:
+- Pick the child with the happiness value == 3. The happiness value of the remaining children becomes [0,1].
+- Pick the child with the happiness value == 1. The happiness value of the remaining child becomes [0]. Note that the happiness value cannot become less than 0.
+The sum of the happiness values of the selected children is 3 + 1 = 4.
+
+Example 2:-
+Input: happiness = [1,1,1,1], k = 2
+Output: 1
+Explanation: We can pick 2 children in the following way:
+- Pick any child with the happiness value == 1. The happiness value of the remaining children becomes [0,0,0].
+- Pick the child with the happiness value == 0. The happiness value of the remaining child becomes [0,0].
+The sum of the happiness values of the selected children is 1 + 0 = 1.
+
+Example 3:-
+Input: happiness = [2,3,4,5], k = 1
+Output: 5
+Explanation: We can pick 1 child in the following way:
+- Pick the child with the happiness value == 5. The happiness value of the remaining children becomes [1,2,3].
+The sum of the happiness values of the selected children is 5.
+ 
+Constraints:-
+1 <= n == happiness.length <= 2 * 105
+1 <= happiness[i] <= 108
+1 <= k <= n
+
+=====================================================================================================================================================================================
+
+Solution:-
+
+🦌 Introduction:-
+Merry Christmas everyone!
+If you are here solving LeetCode on Christmas, you have my respect. Since the problem is literally "Maximize Happiness", it feels like the perfect daily challenge. Solve this so you can get back to celebrating! (or doing more leetcode, no judgement there!)
+Logic
+The problem has a catch: every turn you wait, the remaining kids lose 1 happiness point. It's basically a "decay" factor.
+
+Imagine this situation:-
+You are Santa and you have k gifts to hand out. The children are lined up, sorted by how excited they are (Santa's Nice List, happiest in the front).
+Every time you hand a gift to the child at the front, you "bank" their happiness score.
+However, the children waiting in the queue get anxious (or cold!) wondering if they are next.
+This uncertainty causes everyone still in line to lose 1 point of happiness per turn.
+The Strategy:
+To get the maximum total joy, you must "cash out" the happiest kids immediately. If you save a super-happy kid for last, the penalty (waiting time) might eat away all their joy before they even get the gift!
+
+Approach:-
+Sort Descending: happiness.sort(reverse=True). We line up the happiest kids first.
+Loop k times: We only have k gifts to give.
+The Math: For the child at index i, their current happiness is happiness[i] - i (Original Happiness - Time Waited).
+No Negative Vibes: If happiness[i] - i drops below zero, we count it as 0. We don't add negative happiness, maybe those kids just wait for next Christmas (?)
+
+Complexity:-
+Time: O(NlogN) because sorting the line is the hardest part. Handing out the gifts is just O(k).
+Space: O(1) effectively (ignoring sort memory).
+
+Code:-
+class Solution {
+    public long maximumHappinessSum(int[] happiness, int k) {
+        Arrays.sort(happiness);
+        long ans = 0;
+        int n = happiness.length - 1;
+        for(int i = 0; i < k; i++) {
+            int val = happiness[n - i] - i;
+            if(val > 0) ans += val;
+            else break;
+        }
+        return ans;
+    }
+}
