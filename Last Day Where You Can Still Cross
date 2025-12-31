@@ -45,3 +45,154 @@ All the values of cells are unique.
 ====================================================================================================================================================================================
 
 Solution:-
+Intuition
+We can process the flooding sequence backwards, converting water back to land
+Finding the last crossable day forward equals finding the first crossable day backward
+As we move through cells in reverse, each water cell becomes land
+Every new land cell connects with its land neighbors
+Continue until the top and bottom rows link together, or all cells are processed
+image.png
+image.png
+
+Since the top row might have several separate land cells, how do we efficiently verify whether any top row cell connects to any bottom row cell? Must we test each pair individually?
+
+Solution
+Use two virtual nodes in the DSU structure (top and bottom) to represent all land cells in their respective rows collectively. No individual testing needed.
+
+image.png
+
+While iterating, each water cell that becomes land:
+
+Connects to adjacent land cells
+Links to the top node if positioned in row 0
+Links to the bottom node if positioned in the last row
+Checking whether first and last rows connect reduces to checking if top and bottom virtual nodes are connected.
+
+The following visualization demonstrates this process:
+
+image.png
+
+Algorithm
+Initialize a DSU structure with size row×col+2 (includes two virtual nodes)
+Create a grid initialized to all zeros (representing all land initially)
+Iterate through cells in reverse order from i=cells.length−1 down to 0
+For each cell cells[i]:
+Convert to 0-indexed coordinates: r=cells[i][0]−1, c=cells[i][1]−1
+Mark as land: grid[r][c]=1
+Calculate cell index: index=r×col+c+1
+Check all four adjacent positions. For each valid land neighbor, union them in DSU
+If r=0, union with node 0 (top virtual node)
+If r=row−1, union with node row×col+1 (bottom virtual node)
+Check if find(0)=find(row×col+1). If yes, return i
+Return −1 if no connection found
+Time Complexity: O(row×col)
+Space Complexity: O(row×col)
+
+DSU - water cells
+
+Unlike the previous approach that connected land cells backwards, this method connects water cells forward in time.
+
+Key observation:
+
+When water forms a continuous path connecting left and right columns on day i, no land path can connect top to bottom
+The last crossable day is the day right before water blocks all paths
+image.png
+
+This approach differs from the land cell method:
+
+Eight-direction connectivity:
+Water cells check all eight neighbors (including diagonals). An eight-way water connection fully blocks any land path from top to bottom
+
+Left-right virtual nodes:
+Use two additional DSU nodes (left and right) representing all water cells in the leftmost and rightmost columns. When these nodes connect, a blocking water pathway exists
+
+Algorithm
+Initialize a DSU structure with size row×col+2 (includes two virtual nodes)
+Create a grid initialized to all zeros (representing all land initially)
+Iterate through cells in forward order from i=0 to row×col−1
+For each cell cells[i]:
+Convert to 0-indexed coordinates: r=cells[i][0]−1, c=cells[i][1]−1
+Mark as water: grid[r][c]=1
+Calculate cell index: index=r×col+c+1
+Check all eight adjacent positions. For each valid water neighbor, union them in DSU
+If c=0, union with node 0 (left virtual node)
+If c=col−1, union with node row×col+1 (right virtual node)
+Check if find(0)=find(row×col+1). If yes, return i
+Return −1 if no blocking connection found
+Time Complexity: O((row×col)×α(row×col))
+Space Complexity: O(row×col)
+ 
+Code:-
+class Solution {
+    public int latestDayToCross(int row, int col, int[][] cells) {
+        DSU dsu = new DSU(row * col + 2);
+        int[][] grid = new int[row][col];
+        int[][] dirs = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
+
+        for (int i = 0; i < row * col; i++) {
+            int r = cells[i][0] - 1;
+            int c = cells[i][1] - 1;
+            grid[r][c] = 1;
+
+            int id1 = r * col + c + 1;
+
+            for (int[] d : dirs) {
+                int nr = r + d[0];
+                int nc = c + d[1];
+                if (nr >= 0 && nr < row && nc >= 0 && nc < col && grid[nr][nc] == 1) {
+                    dsu.union(id1, nr * col + nc + 1);
+                }
+            }
+
+            if (c == 0)
+                dsu.union(0, id1);
+            if (c == col - 1)
+                dsu.union(row * col + 1, id1);
+
+            if (dsu.find(0) == dsu.find(row * col + 1))
+                return i;
+        }
+
+        return -1;
+    }
+}
+
+class DSU {
+    int[] root, size;
+
+    public DSU(int n) {
+        root = new int[n];
+        size = new int[n];
+        for (int i = 0; i < n; i++)
+            root[i] = i;
+        Arrays.fill(size, 1);
+    }
+
+    public int find(int x) {
+        if (root[x] != x)
+            root[x] = find(root[x]);
+        return root[x];
+    }
+
+    public void union(int x, int y) {
+        int rx = find(x);
+        int ry = find(y);
+
+        if (rx == ry)
+            return;
+
+        if (size[rx] > size[ry]) {
+            int tmp = rx;
+            rx = ry;
+            ry = tmp;
+        }
+
+        root[rx] = ry;
+        size[ry] += size[rx];
+    }
+}
+
+
+
+
+
