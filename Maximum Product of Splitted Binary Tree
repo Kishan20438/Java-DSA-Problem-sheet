@@ -1,0 +1,74 @@
+
+1339 problem:-
+Given the root of a binary tree, split the binary tree into two subtrees by removing one edge such that the product of the sums of the subtrees is maximized.
+Return the maximum product of the sums of the two subtrees. Since the answer may be too large, return it modulo 109 + 7.
+Note that you need to maximize the answer before taking the mod and not after taking it.
+
+Example 1:
+Input: root = [1,2,3,4,5,6]
+Output: 110
+Explanation: Remove the red edge and get 2 binary trees with sum 11 and 10. Their product is 110 (11*10)
+
+Example 2:
+Input: root = [1,null,2,3,4,null,null,5,6]
+Output: 90
+Explanation: Remove the red edge and get 2 binary trees with sum 15 and 6.Their product is 90 (15*6)
+ 
+Constraints:
+The number of nodes in the tree is in the range [2, 5 * 104].
+1 <= Node.val <= 104
+
+===========================================================================================================================================================================
+
+Solution:-
+
+Intuition:-
+We want to maximize the product of sums of two subtrees obtained by removing one edge.
+For any subtree with sum subtreeSum, removing the edge above it splits the tree into:
+subtreeSum × (totalSum - subtreeSum)
+So the problem reduces to:
+Compute the total sum of all nodes.
+Compute subtree sums for every node and maximize the product.
+This naturally leads to a two-pass DFS.
+
+Approach
+First DFS (sum function): Traverse the tree to calculate totalSum.
+Second DFS (fun function):
+For each node, compute its subtreeSum = node.val + left + right.
+Calculate the product if the edge above this node is removed:
+product = subtreeSum × (totalSum - subtreeSum)
+Update ans if product is larger than the current maximum.
+Return ans % 10^9 + 7 to handle large values.
+Important detail: Use long for intermediate sums/products to prevent overflow. Modulo should only be applied at the very end.
+
+Complexity:-
+Time complexity:
+O(n)
+Each node is visited twice (once in sum, once in fun).
+Space complexity:
+O(logn)
+In worst case (skewed tree), H = N. In balanced tree, H = log N.
+
+Code:-
+class Solution {
+    long total = 0, best = 0;
+    static final int MOD = 1_000_000_007;
+
+    long sum(TreeNode node) {
+        if (node == null) return 0;
+        return node.val + sum(node.left) + sum(node.right);
+    }
+
+    long dfs(TreeNode node) {
+        if (node == null) return 0;
+        long s = node.val + dfs(node.left) + dfs(node.right);
+        best = Math.max(best, s * (total - s));
+        return s;
+    }
+
+    public int maxProduct(TreeNode root) {
+        total = sum(root);
+        dfs(root);
+        return (int)(best % MOD);
+    }
+}
