@@ -1,0 +1,142 @@
+
+1458 Problem:-
+Given two arrays nums1 and nums2.
+Return the maximum dot product between non-empty subsequences of nums1 and nums2 with the same length.
+A subsequence of a array is a new array which is formed from the original array by deleting some (can be none) of the characters,
+without disturbing the relative positions of the remaining characters. (ie, [2,3,5] is a subsequence of [1,2,3,4,5] while [1,5,3] is not).
+
+Example 1:
+Input: nums1 = [2,1,-2,5], nums2 = [3,0,-6]
+Output: 18
+Explanation: Take subsequence [2,-2] from nums1 and subsequence [3,-6] from nums2.
+Their dot product is (2*3 + (-2)*(-6)) = 18.
+
+Example 2:
+Input: nums1 = [3,-2], nums2 = [2,-6,7]
+Output: 21
+Explanation: Take subsequence [3] from nums1 and subsequence [7] from nums2.
+Their dot product is (3*7) = 21.
+
+Example 3:
+Input: nums1 = [-1,-1], nums2 = [1,1]
+Output: -1
+Explanation: Take subsequence [-1] from nums1 and subsequence [1] from nums2.
+Their dot product is -1.
+ 
+Constraints:
+1 <= nums1.length, nums2.length <= 500
+-1000 <= nums1[i], nums2[i] <= 1000
+
+=====================================================================================================================================================================================
+
+Solution:-
+
+🧠 Intuition:-
+Imagine you have two rows of partners, each standing in a fixed order:
+nums1 on the left
+nums2 on the right
+Each person has a value. When you pair one person from nums1 with one from nums2, you earn a ** score** equal to: nums1[i] × nums2[j]
+Your goal is to form two non-empty subsequences (one from each list) such that the sum of products of paired elements is maximized.
+
+🔒 Rules / Constraints
+Order Must Be Preserved (Subsequence Rule)
+If you pair nums1[i] with nums2[j], the next pair must use indices strictly greater than i and j.
+You cannot go backward in either list.
+At Least One Pair Is Mandatory
+You cannot choose an empty subsequence.
+This is crucial when all numbers are negative — the answer may be a single pair.
+Skipping Is Allowed
+You may skip elements from either array if pairing them is not beneficial.
+
+🤔 Core Challenge
+The main difficulty is that:
+Adding more pairs does not always increase the score.
+Negative values can reduce the total sum.
+Sometimes the optimal answer is to start and end with a single pair.
+So at every step, we must carefully choose between:
+pairing,
+skipping,
+or stopping.
+Gemini_Generated_Image_jmoxcjmoxcjmoxcj.png
+
+💡 Approach — Dynamic Programming (Memoization)
+We solve this using Dynamic Programming with Memoization to avoid recomputing overlapping subproblems.
+
+🔑 DP Definition
+Let: dp(i, j)
+be the maximum dot product obtainable using subsequences from:
+nums1[i:]
+nums2[j:]
+
+🔄 Choices at State (i, j)
+At each position (i, j), we have four possible actions:
+
+1️⃣ Pair and Continue
+Pair the current elements and continue with the remaining arrays:
+nums1[i] × nums2[j] + dp(i+1, j+1)
+This ensures we always select at least one pair, even when continuing would reduce the score.
+
+3️⃣ Skip Element from nums1
+Ignore nums1[i] and move forward:
+dp(i+1, j)
+
+4️⃣ Skip Element from nums2
+Ignore nums2[j] and move forward:
+dp(i, j+1)
+
+✅ State Transition:-
+We take the maximum of all four options:
+dp(i, j) = max( nums1[i] × nums2[j] + dp(i+1, j+1), nums1[i] × nums2[j], dp(i+1, j), dp(i, j+1) )
+Each (i, j) result is stored in a memo table so it is computed only once.
+
+🧮 Complexity Analysis
+⏱ Time Complexity:-
+There are N × M unique (i, j) states.
+Each state is computed exactly once. (OxN)
+💾 Space Complexity;-
+Memoization table stores results for each (i, j).
+
+code:-
+import java.util.*;
+class Solution {
+    int[] nums1, nums2;
+    int[][] memo;
+    int n, m;
+    final int NEG_INF = (int) -1e9;
+
+    int dp(int i, int j) {
+        if (i == n || j == m)
+            return NEG_INF;
+
+        if (memo[i][j] != Integer.MIN_VALUE)
+            return memo[i][j];
+
+        int take = nums1[i] * nums2[j];
+
+        int res = Math.max(
+            Math.max(
+                take + dp(i + 1, j + 1), // take both and continue
+                take                    // take and end here
+            ),
+            Math.max(
+                dp(i + 1, j),           // skip nums1[i]
+                dp(i, j + 1)            // skip nums2[j]
+            )
+        );
+
+        return memo[i][j] = res;
+    }
+
+    public int maxDotProduct(int[] a, int[] b) {
+        nums1 = a;
+        nums2 = b;
+        n = nums1.length;
+        m = nums2.length;
+
+        memo = new int[n][m];
+        for (int i = 0; i < n; i++)
+            Arrays.fill(memo[i], Integer.MIN_VALUE);
+
+        return dp(0, 0);
+    }
+}
