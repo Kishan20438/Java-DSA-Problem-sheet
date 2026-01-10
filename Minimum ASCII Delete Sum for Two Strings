@@ -1,0 +1,84 @@
+
+712 Problem:-
+
+Given two strings s1 and s2, return the lowest ASCII sum of deleted characters to make two strings equal.
+
+Example 1:-
+Input: s1 = "sea", s2 = "eat"
+Output: 231
+Explanation: Deleting "s" from "sea" adds the ASCII value of "s" (115) to the sum.
+Deleting "t" from "eat" adds 116 to the sum.
+At the end, both strings are equal, and 115 + 116 = 231 is the minimum sum possible to achieve this.
+
+Example 2:-
+Input: s1 = "delete", s2 = "leet"
+Output: 403
+
+Explanation: Deleting "dee" from "delete" to turn the string into "let",
+adds 100[d] + 101[e] + 101[e] to the sum.
+Deleting "e" from "leet" adds 101[e] to the sum.
+At the end, both strings are equal to "let", and the answer is 100+101+101+101 = 403.
+If instead we turned both strings into "lee" or "eet", we would get answers of 433 or 417, which are higher.
+ 
+Constraints:-
+1 <= s1.length, s2.length <= 1000
+s1 and s2 consist of lowercase English letters.
+
+========================================================================================================================================================================================
+
+Solution:-
+Intuition
+To make two strings equal, we can only delete characters.
+So for any positions i in s1 and j in s2, we want the minimum ASCII delete cost to make s1[i…] and s2[j…] equal:
+If s1[i] == s2[j], we keep both and move ahead.
+Otherwise, we either delete s1[i] or delete s2[j], and take the cheaper option.
+This naturally forms a 2D DP over indices (i, j).
+
+Approach:-
+Use Top-Down DP (Recursion + Memoization):
+Define:
+dp[i][j] = minimum ASCII delete sum to make s1[i…] and s2[j…] equal.
+
+Transitions::-
+Base cases
+If i == n1, delete all remaining characters of s2[j…].
+If j == n2, delete all remaining characters of s1[i…].
+
+Memoization:-
+If dp[i][j] is already computed, return it.
+Matching characters
+If s1[i] == s2[j], no cost → dp[i][j] = helper(i+1, j+1)
+Different characters
+Delete from s1: s1[i] + helper(i+1, j)
+Delete from s2: s2[j] + helper(i, j+1)
+Take minimum.
+Strings are passed by reference to avoid heavy copying.
+
+Complexity
+Time complexity: O(n1 * n2)
+Space complexity: O(n1 * n2)
+
+Code:-
+
+class Solution {
+    public int minimumDeleteSum(String s1, String s2) {
+        int m = s1.length(), n = s2.length();
+        int[][] dp = new int[m + 1][n + 1];
+
+        for (int i = m - 1; i >= 0; i--) {
+            for (int j = n - 1; j >= 0; j--) {
+                if (s1.charAt(i) == s2.charAt(j)) {
+                    dp[i][j] = s1.charAt(i) + dp[i + 1][j + 1];
+                } else {
+                    dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+                }
+            }
+        }
+
+        int total = 0;
+        for (char c : s1.toCharArray()) total += c;
+        for (char c : s2.toCharArray()) total += c;
+
+        return total - 2 * dp[0][0];
+    }
+}
