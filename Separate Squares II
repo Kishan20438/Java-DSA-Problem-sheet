@@ -1,0 +1,199 @@
+
+3454 Problem:-
+You are given a 2D integer array squares. Each squares[i] = [xi, yi, li] represents the coordinates of the bottom-left point and the side length of a square parallel to the x-axis.
+Find the minimum y-coordinate value of a horizontal line such that the total area covered by squares above the line equals the total area covered by squares below the line.
+Answers within 10-5 of the actual answer will be accepted.
+Note: Squares may overlap. Overlapping areas should be counted only once in this version.
+
+Example 1:
+Input: squares = [[0,0,1],[2,2,1]]
+Output: 1.00000
+Explanation:
+Any horizontal line between y = 1 and y = 2 results in an equal split, with 1 square unit above and 1 square unit below. The minimum y-value is 1.
+
+Example 2:
+Input: squares = [[0,0,2],[1,1,1]]
+Output: 1.00000
+Explanation:
+Since the blue square overlaps with the red square, it will not be counted again. Thus, the line y = 1 splits the squares into two equal parts.
+
+Constraints:-
+1 <= squares.length <= 5 * 104
+squares[i] = [xi, yi, li]
+squares[i].length == 3
+0 <= xi, yi <= 109
+1 <= li <= 109
+The total area of all the squares will not exceed 1015.
+
+=======================================================================================================================================================================================
+
+
+Solution:-
+Intuition
+We need to split a set of overlapping squares into two regions (above and below a horizontal line) such that the total union area of the squares is equally divided. Since squares can overlap, we must compute the union area (i.e. overlapping parts are counted only once). The union area function (F(y)) – which gives the total area of all parts of squares below a horizontal line (y) – is monotonic and piecewise linear. Therefore, by constructing this function in one sweep, we can then locate (by interpolation) the minimal (y) at which the cumulative area equals half the total union area.
+
+Approach:-
+Event Creation & Coordinate Compression:
+Each square is represented as a rectangle ([x, x+l] \times [y, y+l]). For each square, we generate two events:
+An "add" event at (y) that adds the interval ([x, x+l]).
+A "remove" event at (y+l) that removes that interval.
+We also collect all x–boundaries and compress them.
+First Sweep (Total Union Area):
+Using a segment tree over the compressed x–coordinates, we sweep the events sorted by (y). Between two successive event (y)–values, the union length in x remains constant. We compute the area contribution from each vertical slab and accumulate to get the total union area (A).
+Second Sweep (Finding (L)):
+We perform a second sweep (reinitializing the segment tree) to build the piecewise linear function (F(y)) that gives the union area below (y). When (F(y)) reaches or exceeds (A/2), we linearly interpolate within that segment to compute the minimum (y) that splits the area equally.
+
+Complexity:-
+Time Complexity: (O(N \log N)), where (N) is the number of squares (each square produces 2 events and segment tree operations are logarithmic).
+Space Complexity: (O(N)), due to the events array, coordinate compression, and segment tree storage.
+
+Code:-
+import java.util.*;
+import java.util.Arrays;
+
+class Solution {
+    public double separateSquares(int[][] squares) {
+        int N = squares.length;
+        int m = 2 * N;  // each square produces two events.
+        Event[] events = new Event[m];
+        double[] xsRaw = new double[m];
+        int eIdx = 0, xIdx = 0;
+        for (int[] sq : squares) {
+            double x = sq[0], y = sq[1], l = sq[2];
+            double x2 = x + l, y2 = y + l;
+            events[eIdx++] = new Event(y, x, x2, 1);
+            events[eIdx++] = new Event(y2, x, x2, -1);
+            xsRaw[xIdx++] = x;
+            xsRaw[xIdx++] = x2;
+        }
+        // Sort events by y.
+        Arrays.sort(events, Comparator.comparingDouble(ev -> ev.y));
+        // Compress x–coordinates.
+        double[] xs = compress(xsRaw);
+        // Build segment tree over compressed x.
+        SegmentTree st = new SegmentTree(xs);
+ 
+        // Sweep once and build piecewise linear segments:
+        // Each segment covers an interval [yStart, yEnd] where the union x–length is constant.
+        List<SweepSegment> segs = new ArrayList<>();
+        double cumArea = 0.0;
+        double prevY = events[0].y;
+        int i = 0;
+        while (i < m) {
+            double curY = events[i].y;
+            if (curY > prevY) {
+                double unionX = st.query();
+                // Record segment from prevY to curY with union length unionX
+                segs.add(new SweepSegment(prevY, curY, cumArea, unionX));
+                cumArea += unionX * (curY - prevY);
+                prevY = curY;
+            }
+            // Process all events at curY.
+            while (i < m && events[i].y == curY) {
+                int lIdx = Arrays.binarySearch(xs, events[i].x1);
+                if (lIdx < 0) lIdx = -lIdx - 1;
+                int rIdx = Arrays.binarySearch(xs, events[i].x2);
+                if (rIdx < 0) rIdx = -rIdx - 1;
+                st.update(1, 0, xs.length - 1, lIdx, rIdx, events[i].type);
+                i++;
+            }
+        }
+ 
+        double totalArea = cumArea;
+        double target = totalArea / 2.0;
+ 
+        // Now, the union–area function F(y) is piecewise linear.
+        // Find the first segment where the cumulative area crosses target.
+        for (SweepSegment seg : segs) {
+            double segArea = seg.unionX * (seg.yEnd - seg.yStart);
+            if (target <= seg.startCum + segArea + 1e-10) {
+                double needed = target - seg.startCum;
+                // If unionX is 0, then the area does not increase; skip this segment.
+                if (seg.unionX < 1e-10) continue;
+                double dy = needed / seg.unionX;
+                return seg.yStart + dy;
+            }
+        }
+        return prevY;  // fallback (should not happen)
+    }
+    
+    // Compress an array of doubles to a sorted array of unique values.
+    private double[] compress(double[] arr) {
+        Arrays.sort(arr);
+        int cnt = 1;
+        for (int i = 1; i < arr.length; i++) {
+            if (Double.compare(arr[i], arr[i - 1]) != 0) cnt++;
+        }
+        double[] res = new double[cnt];
+        res[0] = arr[0];
+        int j = 1;
+        for (int i = 1; i < arr.length; i++) {
+            if (Double.compare(arr[i], arr[i - 1]) != 0) {
+                res[j++] = arr[i];
+            }
+        }
+        return res;
+    }
+    
+    // Event for sweep-line (vertical boundaries).
+    class Event {
+        double y, x1, x2;
+        int type;  // +1 for adding, -1 for removing an interval.
+        Event(double y, double x1, double x2, int type) {
+            this.y = y;
+            this.x1 = x1;
+            this.x2 = x2;
+            this.type = type;
+        }
+    }
+    
+    // Segment representing a portion of the union–area function.
+    class SweepSegment {
+        double yStart, yEnd, startCum; // startCum: cumulative area at yStart.
+        double unionX; // union length in x over this segment.
+        SweepSegment(double yStart, double yEnd, double startCum, double unionX) {
+            this.yStart = yStart;
+            this.yEnd = yEnd;
+            this.startCum = startCum;
+            this.unionX = unionX;
+        }
+    }
+    
+    // Segment Tree for union–length of x–intervals.
+    class SegmentTree {
+        int n;
+        double[] tree; // tree[idx]: total length covered in the node's interval.
+        int[] count;   // count[idx]: coverage count.
+        double[] xs;   // compressed x–coordinates.
+ 
+        SegmentTree(double[] xs) {
+            this.xs = xs;
+            this.n = xs.length;
+            tree = new double[4 * n];
+            count = new int[4 * n];
+        }
+ 
+        // Update the range [ql, qr) with delta.
+        void update(int idx, int l, int r, int ql, int qr, int delta) {
+            if (qr <= l || ql >= r) return;
+            if (ql <= l && r <= qr) {
+                count[idx] += delta;
+            } else {
+                int mid = (l + r) >> 1;
+                update(idx * 2, l, mid, ql, qr, delta);
+                update(idx * 2 + 1, mid, r, ql, qr, delta);
+            }
+            if (count[idx] > 0) {
+                tree[idx] = xs[r] - xs[l];
+            } else if (r - l == 1) {
+                tree[idx] = 0;
+            } else {
+                tree[idx] = tree[idx * 2] + tree[idx * 2 + 1];
+            }
+        }
+ 
+        double query() {
+            return tree[1];
+        }
+    }
+}
