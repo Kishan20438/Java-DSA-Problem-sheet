@@ -1,0 +1,81 @@
+
+2943 Problem:-
+
+You are given the two integers, n and m and two integer arrays, hBars and vBars. The grid has n + 2 horizontal and m + 2 vertical bars, creating 1 x 1 unit cells. The bars are indexed starting from 1.
+You can remove some of the bars in hBars from horizontal bars and some of the bars in vBars from vertical bars. Note that other bars are fixed and cannot be removed.
+Return an integer denoting the maximum area of a square-shaped hole in the grid, after removing some bars (possibly none).
+
+Example 1:
+Input: n = 2, m = 1, hBars = [2,3], vBars = [2]
+Output: 4
+Explanation:
+The left image shows the initial grid formed by the bars. The horizontal bars are [1,2,3,4], and the vertical bars are [1,2,3].
+One way to get the maximum square-shaped hole is by removing horizontal bar 2 and vertical bar 2.
+
+Example 2:
+Input: n = 1, m = 1, hBars = [2], vBars = [2]
+Output: 4
+Explanation:
+To get the maximum square-shaped hole, we remove horizontal bar 2 and vertical bar 2.
+
+Example 3:
+Input: n = 2, m = 3, hBars = [2,3], vBars = [2,4]
+Output: 4
+Explanation:
+One way to get the maximum square-shaped hole is by removing horizontal bar 3, and vertical bar 4.
+
+Constraints:
+1 <= n <= 109
+1 <= m <= 109
+1 <= hBars.length <= 100
+2 <= hBars[i] <= n + 1
+1 <= vBars.length <= 100
+2 <= vBars[i] <= m + 1
+All values in hBars are distinct.
+All values in vBars are distinct.
+
+=================================================================================================================
+
+Solution:-
+
+Intuition:-
+
+First thought is to try remove a bar or two and find what does it change, so if you remove hBar 2, we notice that there would be 4 cells with area of 2 each. for example hbar = 2,3,4 and vBar = 2,3.
+But what we need is a square and not a rectangle, the only way to make these rectangles into a square is by removing a vertical bar.
+So now if we remove any of the vertical bar, we'll get a 2 x 2 i.e a cell of area 4.
+Similarly, consider removing hBars 2 and 3 like below
+We'll now have 4 cells of area 3 each, but if need to make a square out of this, we need to remove atleast 2 vBars so that we can make a square of 3 x 3.
+But we have to remove consecutive vBars since removing 2 and 4 won't work as that would give us two cells of 3 x 2 area.
+Through this we can infer that we need to find length of longest consecutive sequence of bars that can be removed from both arrays.
+So lets say we have this length of longest consecutive sequence as 3 and 2, we can then have the largest square of 3 x 3. So we'll take minimum of both lengths i.e 2 and add one to it to get the length of side of square.
+Why did we add 1? because if we remove 1 bar we give rise to 2 area cells, if we remove 2 bars we give rise to 3 area cells and so on, so removing n bars would give us a cell of area n + 1.
+
+Approach:-
+
+Initialise the variables.
+Sort the hBars and vBars array so we can find longest consecutive sequence.
+Iterate over both the arrays and find the length of current sequence.
+If its greater than previous max, update max, else make temp = 1.
+Lastly find the length of minimum longest consecutive sequence of both arrays and add one.
+Our square area is squareLen * squareLen
+
+Complexity:-
+Time complexity: O(H log H + V log V)
+Space complexity: O(1)
+
+Code:-
+class Solution {
+    public int getMaxGap(int[] bars){
+        Arrays.sort(bars);
+        int count = 2, res = 2;
+        for(int i = 1; i < bars.length; ++i){
+            count = (bars[i-1] + 1 == bars[i])? count + 1: 2;
+            res = Math.max(res, count);
+        }
+        return res;
+    }
+    public int maximizeSquareHoleArea(int n, int m, int[] hBars, int[] vBars) {
+        int gap = Math.min(getMaxGap(hBars), getMaxGap(vBars));
+        return gap * gap;
+    }
+}
