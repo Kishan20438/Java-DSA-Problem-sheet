@@ -1,0 +1,88 @@
+
+2975 Problem:-
+There is a large (m - 1) x (n - 1) rectangular field with corners at (1, 1) and (m, n) containing some horizontal and vertical fences given in arrays hFences and vFences respectively.
+Horizontal fences are from the coordinates (hFences[i], 1) to (hFences[i], n) and vertical fences are from the coordinates (1, vFences[i]) to (m, vFences[i]).
+Return the maximum area of a square field that can be formed by removing some fences (possibly none) or -1 if it is impossible to make a square field.
+Since the answer may be large, return it modulo 109 + 7.
+Note: The field is surrounded by two horizontal fences from the coordinates (1, 1) to (1, n) and (m, 1) to (m, n) and two vertical fences from the coordinates (1, 1) to (m, 1) and (1, n) to (m, n). These fences cannot be removed.
+
+Example 1:-
+Input: m = 4, n = 3, hFences = [2,3], vFences = [2]
+Output: 4
+Explanation: Removing the horizontal fence at 2 and the vertical fence at 2 will give a square field of area 4.
+
+Example 2:-
+Input: m = 6, n = 7, hFences = [2], vFences = [4]
+Output: -1
+Explanation: It can be proved that there is no way to create a square field by removing fences.
+ 
+Constraints:-
+3 <= m, n <= 109
+1 <= hFences.length, vFences.length <= 600
+1 < hFences[i] < m
+1 < vFences[i] < n
+hFences and vFences are unique.
+
+==================================================================================================================================================================================
+
+Solution:-
+Intuition:-
+The problem asks for the largest square. A square is formed by choosing two horizontal fences and two vertical fences such that the distance between the horizontal lines equals the distance between the vertical lines.
+Key Realization: We shouldn't compare the absolute positions of the fences (e.g., "is there a fence at index 5 in both?"). Instead, we must compare the Gaps (distances) between every pair of fences.
+If we have horizontal fences at y=1 and y=4, we have a strip of height 3.
+If we have vertical fences at x=2 and x=5, we have a strip of width 3.
+Since height == width, these four fences form a valid square of side 3.
+Because the number of fences is small (N≤600), we can brute-force all possible gaps (N^2) efficiently.
+
+Approach:-
+Add Boundaries: The edges of the field (1 and m for horizontal, 1 and n for vertical) count as fences. Add them to the input lists.
+Sort: Sort both fence lists to process them in order.
+Collect Horizontal Gaps: Iterate through every pair of horizontal fences (i, j), calculate the gap hFences[j] - hFences[i], and store these gaps in a HashSet.
+Check Vertical Gaps: Iterate through every pair of vertical fences. Calculate the gap. If this gap exists in our Horizontal Gap HashSet, it means we can form a square!
+Track Maximum: Keep track of the largest matching gap found.
+Modulo Arithmetic: Calculate (maxGap * maxGap) % 10^9 + 7. Note that we calculate the area using long long to prevent overflow before applying the modulo.
+
+Complexity:-
+Time complexity: O(H^2 + V^2)
+Space complexity: O(H^2)
+
+Code:-
+class Solution {
+public:
+    int maximizeSquareArea(int m, int n, vector<int>& hFences, vector<int>& vFences) {
+        // 1. Add implicit boundary fences (1 and m/n)
+        hFences.push_back(1);
+        hFences.push_back(m);
+        vFences.push_back(1);
+        vFences.push_back(n);
+
+        // 2. Sort to easily calculate gaps
+        sort(hFences.begin(), hFences.end());
+        sort(vFences.begin(), vFences.end());
+
+        // 3. Store all possible horizontal gaps in a HashSet
+        unordered_set<int> hGaps;
+        for(int i = 0; i < hFences.size(); i++) {
+            for(int j = i + 1; j < hFences.size(); j++) {
+                hGaps.insert(hFences[j] - hFences[i]);
+            }
+        }
+
+        // 4. Check all possible vertical gaps against the HashSet
+        long long maxSide = -1;
+        for(int i = 0; i < vFences.size(); i++) {
+            for(int j = i + 1; j < vFences.size(); j++) {
+                int currentGap = vFences[j] - vFences[i];
+                if(hGaps.count(currentGap)) {
+                    maxSide = max(maxSide, (long long)currentGap);
+                }
+            }
+        }
+
+        if(maxSide == -1) return -1;
+
+        // 5. Return area modulo 10^9 + 7
+        long long MOD = 1e9 + 7;
+        return (maxSide * maxSide) % MOD;
+    }
+};
