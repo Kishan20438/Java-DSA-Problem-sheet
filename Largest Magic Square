@@ -1,0 +1,111 @@
+
+1895 Problem:-
+
+The integers in the magic square do not have to be distinct. Every 1 x 1 grid is trivially a magic square.
+Given an m x n integer grid, return the size (i.e., the side length k) of the largest magic square that can be found within this grid.
+
+Example 1:
+Input: grid = [[7,1,4,5,6],[2,5,1,6,4],[1,5,4,3,2],[1,2,7,3,4]]
+Output: 3
+Explanation: The largest magic square has a size of 3.
+Every row sum, column sum, and diagonal sum of this magic square is equal to 12.
+- Row sums: 5+1+6 = 5+4+3 = 2+7+3 = 12
+- Column sums: 5+5+2 = 1+4+7 = 6+3+3 = 12
+- Diagonal sums: 5+4+3 = 6+4+2 = 12
+
+Example 2:
+Input: grid = [[5,1,3,1],[9,3,3,1],[1,3,3,8]]
+Output: 2
+ 
+Constraints:-
+m == grid.length
+n == grid[i].length
+1 <= m, n <= 50
+1 <= grid[i][j] <= 106
+
+===================================================================================================================================
+
+Solution:-
+
+Intuition:-
+A magic square requires all rows, all columns, and both diagonals to have the same sum.
+Checking these sums repeatedly for every possible sub-square would be inefficient.
+To optimize this, we precompute prefix sums for rows, columns, and both diagonals.
+This allows us to calculate any required sum in O(1) time, making validation of each square fast.
+
+Approach:-
+Precompute Prefix Sums
+Build four 2D prefix sum arrays:
+rowSum for row range sums
+colSum for column range sums
+diag for main diagonal sums
+antidiag for anti-diagonal sums
+Try Square Sizes from Large to Small
+Iterate square size k from min(r, c) down to 2
+The first valid square found is the largest one
+Validate Each k x k Sub-square
+Compare main diagonal and anti-diagonal sums
+If they match, check:
+All k rows have the same sum
+All k columns have the same sum
+Early Exit
+Return k immediately when a valid magic square is found
+Fallback Case
+If no square of size ≥ 2 exists, return 1 (a single cell is always magic)
+
+Complexity:-
+Time Complexity: O(min(r, c)^3)
+Trying all square sizes k
+For each size, scanning all possible positions
+Checking k rows and columns per position
+Space Complexity: O(r * c)
+Four prefix sum matrices
+
+Code:-
+class Solution {
+    public int largestMagicSquare(int[][] grid) {
+        int r = grid.length, c = grid[0].length;
+        int[][] rowSum = new int[r + 1][c + 1];
+        int[][] colSum = new int[r + 1][c + 1];
+        int[][] diag = new int[r + 1][c + 1];
+        int[][] antidiag = new int[r + 1][c + 1];
+
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                int x = grid[i][j];
+                rowSum[i + 1][j + 1] = rowSum[i + 1][j] + x;
+                colSum[i + 1][j + 1] = colSum[i][j + 1] + x;
+                diag[i + 1][j + 1] = diag[i][j] + x;
+                antidiag[i + 1][j] = antidiag[i][j + 1] + x;
+            }
+        }
+
+        for (int k = Math.min(r, c); k >= 2; k--) {
+            if (isMagic(k, r, c, rowSum, colSum, diag, antidiag)) 
+                return k;
+        }
+        return 1;
+    }
+
+    private boolean isMagic(int k, int r, int c, int[][] rowSum, int[][] colSum, int[][] diag, int[][] antidiag) {
+        for (int i = 0; i <= r - k; i++) {
+            for (int j = 0; j <= c - k; j++) {
+                int s = diag[i + k][j + k] - diag[i][j];
+                int anti = antidiag[i + k][j] - antidiag[i][j + k];
+                if (s != anti) 
+                    continue;
+                boolean valid = true;
+                for (int m = 0; m < k; m++) {
+                    int row = rowSum[i + m + 1][j + k] - rowSum[i + m + 1][j];
+                    int col = colSum[i + k][j + m + 1] - colSum[i][j + m + 1];
+                    if (row != s || col != s) {
+                        valid = false; break; 
+                    }
+                }
+                if (valid) 
+                    return true;
+            }
+        }
+        return false;
+    }
+}
