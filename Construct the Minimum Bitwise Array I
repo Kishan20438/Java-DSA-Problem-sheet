@@ -1,0 +1,89 @@
+
+3314 Problem:-
+
+You are given an array nums consisting of n prime integers.
+You need to construct an array ans of length n, such that, for each index i, the bitwise OR of ans[i] and ans[i] + 1 is equal to nums[i], i.e. ans[i] OR (ans[i] + 1) == nums[i].
+Additionally, you must minimize each value of ans[i] in the resulting array.
+If it is not possible to find such a value for ans[i] that satisfies the condition, then set ans[i] = -1.
+
+Example 1:
+Input: nums = [2,3,5,7]
+Output: [-1,1,4,3]
+
+Explanation:
+For i = 0, as there is no value for ans[0] that satisfies ans[0] OR (ans[0] + 1) = 2, so ans[0] = -1.
+For i = 1, the smallest ans[1] that satisfies ans[1] OR (ans[1] + 1) = 3 is 1, because 1 OR (1 + 1) = 3.
+For i = 2, the smallest ans[2] that satisfies ans[2] OR (ans[2] + 1) = 5 is 4, because 4 OR (4 + 1) = 5.
+For i = 3, the smallest ans[3] that satisfies ans[3] OR (ans[3] + 1) = 7 is 3, because 3 OR (3 + 1) = 7.
+
+Example 2:
+Input: nums = [11,13,31]
+Output: [9,12,15]
+
+Explanation:
+For i = 0, the smallest ans[0] that satisfies ans[0] OR (ans[0] + 1) = 11 is 9, because 9 OR (9 + 1) = 11.
+For i = 1, the smallest ans[1] that satisfies ans[1] OR (ans[1] + 1) = 13 is 12, because 12 OR (12 + 1) = 13.
+For i = 2, the smallest ans[2] that satisfies ans[2] OR (ans[2] + 1) = 31 is 15, because 15 OR (15 + 1) = 31.
+ 
+Constraints:
+1 <= nums.length <= 100
+2 <= nums[i] <= 1000
+nums[i] is a prime number.
+
+========================================================================================================================================================================================
+
+Solution:-
+
+Intuition:-
+To solve this, we first need to understand what the operation x | (x + 1) actually does to the binary representation of a number.
+When you add 1 to a number x, the rightmost 0 bit flips to 1, and all the 1s to its right flip to 0.
+
+Example: Let x = 10011 (19).
+x + 1 = 10100 (20).
+When you perform the bitwise OR (|), you combine the bits.
+10011 | 10100 = 10111 (23).
+Key Observation: The result is simply the original number x, but with its rightmost 0 turned into a 1.
+We are given the result (let's call it n) and we need to find the minimum x. This implies n must be a number that ends in a sequence of 1s.
+If n is even (ends in 0), it's impossible to form n using this operation because x | (x+1)always fills the last 0 with a 1, making the result odd. In this case, return-1`.
+If n is odd (ends in 1), we need to find an x such that changing x's last 0 to a 1 gives us n.
+To minimize x, we should pick the 0bit that is at themost significant position` possible.
+Note that n + 1 will flip all the trailing 1s of n to 0 and the first 0 to 1.
+
+Example: n = 10111 (23). n + 1 = 11000 (24).
+We can isolate the new bit using lowbit logic. The bit we want to flip in n to get x is the one immediately to the right of the bit set in (n + 1).
+For example - In 10111 we want to flip 0 which is at position 4 from right, but in 11000, the first set bit i.e 1 is at position 4 too. So finding the position of first set bit in n+1 helps us.
+Formula: x = n - (lowest_set_bit(n + 1) >> 1).
+Why this works? -
+Let n = 10111 (23).
+n + 1 = 11000 (24). Adding 1 ripples through the trailing ones and sets the next available bit.
+lowbit(n + 1) isolates that new bit: 01000 (8).
+Shift right by 1: 00100 (4). Notice that 4 corresponds exactly to the position of the left-most trailing one in 10111.
+n - 4 = 19. This is our minimum x.
+
+Approach:-
+Check Parity, if even add -1.
+Else,
+t = n + 1
+isolate the lowest set bit (1) by t & -t
+Add n - (lowbit >> 1) to the answer.
+Return ans array.
+
+Complexity:-
+Time complexity: O(N)
+Space complexity: O(1)
+
+Code:-
+class Solution {
+    public int[] minBitwiseArray(List<Integer> nums) {
+         int n = nums.size(), res[] = new int[n];
+        for (int i = 0; i < n; i++) {
+            int a = nums.get(i);
+            if (nums.get(i) % 2 == 0) {
+                res[i] = -1;
+            } else {
+                res[i] = a - ((a + 1) & (-a - 1)) / 2;
+            } 
+        }
+        return res;
+    }
+}
