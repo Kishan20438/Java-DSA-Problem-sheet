@@ -1,0 +1,91 @@
+
+3507 Problem:-
+Given an array nums, you can perform the following operation any number of times:
+Select the adjacent pair with the minimum sum in nums. If multiple such pairs exist, choose the leftmost one.
+Replace the pair with their sum.
+Return the minimum number of operations needed to make the array non-decreasing.
+An array is said to be non-decreasing if each element is greater than or equal to its previous element (if it exists).
+
+Example 1:-
+Input: nums = [5,2,3,1]
+Output: 2
+Explanation:
+The pair (3,1) has the minimum sum of 4. After replacement, nums = [5,2,4].
+The pair (2,4) has the minimum sum of 6. After replacement, nums = [5,6].
+The array nums became non-decreasing in two operations.
+
+Example 2:-
+Input: nums = [1,2,2]
+Output: 0
+Explanation:
+The array nums is already sorted.
+
+Constraints:-
+1 <= nums.length <= 50
+-1000 <= nums[i] <= 1000
+
+======================================================================================================================================================================================
+
+Solution:-
+Intuition:-
+Our constraints are low i.e nums.size is between 1 to 50 and nums[i] is between -1000 to 1000. Which means, we can do brute force even if it is O(n^2).
+
+Approach:-
+Iterate the array till we get the sorted (non-decreasing array) i.e while(true) and break it only by returning our answer - operations.
+Check if the array is sorted, if not make isSorted = false.
+If our array is sorted we can return the number of operations till then.
+If not, we need to find the minimum sum and the index of minimum sum, we do that with the help of a for loop, keeping track of minimum sum and the index.
+At last, we replace nums[index] with minimum sum and erase its next element, since nums[i] and nums[i+1] have to be replaced with their sum.
+Add +1 to operations since we just completed one.
+
+Complexity:-
+Time complexity: O(N^2)
+Space complexity: O(N)
+
+Code:-
+class Solution {
+    public int minimumPairRemoval(int[] nums) {
+        // Use an ArrayList for easy removal/insertion
+        List<Integer> arr = new ArrayList<>();
+        for (int num : nums) {
+            arr.add(num);
+        }
+        
+        int operations = 0;
+        
+        while (true) {
+            // 1. Check if sorted
+            boolean isSorted = true;
+            for (int i = 0; i < arr.size() - 1; i++) {
+                if (arr.get(i) > arr.get(i + 1)) {
+                    isSorted = false;
+                    break;
+                }
+            }
+            
+            if (isSorted) {
+                return operations;
+            }
+            
+            // 2. Find the minimum sum pair (leftmost tie-break)
+            int minSum = Integer.MAX_VALUE;
+            int index = -1;
+            
+            for (int i = 0; i < arr.size() - 1; i++) {
+                int sum = arr.get(i) + arr.get(i + 1);
+                if (sum < minSum) {
+                    minSum = sum;
+                    index = i;
+                }
+            }
+            
+            // 3. Perform the merge operation
+            // Update the left element to the sum
+            arr.set(index, minSum);
+            // Remove the right element
+            arr.remove(index + 1);
+            
+            operations++;
+        }
+    }
+}
