@@ -1,4 +1,4 @@
-
+ 
 3507 Problem:-
 Given an array nums, you can perform the following operation any number of times:
 Select the adjacent pair with the minimum sum in nums. If multiple such pairs exist, choose the leftmost one.
