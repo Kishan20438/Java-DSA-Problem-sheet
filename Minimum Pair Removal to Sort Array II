@@ -1,0 +1,181 @@
+
+3510 Problem:-
+Given an array nums, you can perform the following operation any number of times:
+Select the adjacent pair with the minimum sum in nums. If multiple such pairs exist, choose the leftmost one.
+Replace the pair with their sum.
+Return the minimum number of operations needed to make the array non-decreasing.
+An array is said to be non-decreasing if each element is greater than or equal to its previous element (if it exists).
+
+Example 1:
+Input: nums = [5,2,3,1]
+Output: 2
+Explanation:
+The pair (3,1) has the minimum sum of 4. After replacement, nums = [5,2,4].
+The pair (2,4) has the minimum sum of 6. After replacement, nums = [5,6].
+The array nums became non-decreasing in two operations.
+
+Example 2:
+Input: nums = [1,2,2]
+Output: 0
+Explanation:-
+The array nums is already sorted.
+
+Constraints:-
+1 <= nums.length <= 105
+-109 <= nums[i] <= 109
+
+=====================================================================================================================================================================================
+Solution:-
+Intuition:-
+We use a balanced set (priority queue) combined with a doubly linked list structure to maintain adjacent pairs sorted by their sum while efficiently handling element removals.
+An array is non-decreasing when there are zero inversions - adjacent pairs where the left element is greater than the right element.
+We track these "flipped" pairs and stop once the count reaches zero.
+We must always select the pair with minimum sum (leftmost if tied).
+This makes it a simulation problem where we need to:
+Quickly find the minimum sum pair among all adjacent pairs
+Efficiently update adjacent pairs after each merge
+Know when to stop (when no inversions remain)
+
+Procedure:-
+We can implement a doubly-linked list with left[i] and right[i] arrays to maintain neighbor relationships as elements are removed.
+We store all adjacent pairs in a balanced set sorted by:
+(sum,index) for O(logn) minimum extraction
+Track the count of inversions to determine when the array is sorted
+Simulate the exact merging process described in the problem
+
+DLL Structure:-
+The doubly linked list operations maintain adjacency
+neighborright(i) neighborleft(i)=right[i]=left[i]
+Link Update After Merge:
+right[i]
+left[right[j]]
+←right[j]
+←i
+This effectively removes element j from the sequence.
+
+Algorithm:-
+Structure:-
+Create left[i]=i−1 and right[i]=i+1 for all positions
+Create a balanced set pairSum to store pairs as (sum,index)
+Initialize flipped counter to 0
+Iterate array
+Calculate sum: s=array[i]+array[i+1]
+Insert (s,i) into pairSum
+If array[i]>array[i+1]:
+increment inverted pairs flipped
+Process merges as long as the array is not sorted:
+Extract minimum pair
+Get (sum,i) from beginning of pairSum and remove it
+Let j=right[i] be the right neighbor
+Let h=left[i] be the left neighbor
+Let k=right[j] be the neighbor after j
+Remove affected pairs
+Remove pair (h,i) from pairSum if h≥0
+If array[i]>array[j]: decrement flipped
+Remove pair (j,k) from pairSum if k<n
+Update value: array[i]←array[i]+array[j]
+Update links: right[i]←k
+If k<n: left[k]←i
+
+Increment operation.
+Add pairs to set
+Add pair (h,i) to pairSum if h≥0
+If array[h]>array[i]: increment flipped
+Add pair (i,k) to pairSum if k<n
+If array[i]>array[k]: increment flipped
+Finally, return the number of operations.
+
+Time Complexity: O(nlogn)
+Space Complexity: O(n)
+
+Code:-
+
+class Solution {
+    private long flipped;
+    private int[] left;
+    private int[] right;
+    private TreeSet<long[]> pairSum;
+
+    public int minimumPairRemoval(int[] nums) {
+        int N = nums.length;
+        if (N < 2) return 0;
+
+        long[] array = new long[N];
+        for (int i = 0; i < N; i++)
+            array[i] = nums[i];
+
+        flipped = 0;
+        left = new int[N];
+        right = new int[N];
+
+        pairSum = new TreeSet<>((a, b) -> {
+            if (a[0] != b[0])
+                return Long.compare(a[0], b[0]);
+            return Long.compare(a[1], b[1]);
+        });
+
+        for (int i = 0; i < N; i++) {
+            left[i] = i - 1;
+            right[i] = i + 1;
+        }
+
+        for (int i = 0; i < N - 1; i++) {
+            if (array[i] > array[i + 1]) flipped++;
+            pairSum.add(new long[] { array[i] + array[i + 1], i });
+        }
+
+        int op = 0;
+        while (flipped > 0 && !pairSum.isEmpty()) {
+            long[] first = pairSum.pollFirst();
+            int i = (int) first[1];
+
+            int j = right[i];
+            int h = left[i];
+            int k = right[j];
+
+            remove(h, N, array);
+            if (array[i] > array[j])
+                flipped--;
+            remove(j, N, array);
+
+            array[i] += array[j];
+
+            op++;
+            right[i] = k;
+            if (k < N) {
+                left[k] = i;
+            }
+
+            add(h, N, array);
+            add(i, N, array);
+        }
+
+        return op;
+    }
+
+    private void add(int i, int N, long[] array) {
+        if (i >= 0 && i < N) {
+            int j = right[i];
+            if (j < N) {
+                pairSum.add(new long[] { array[i] + array[j], i });
+                if (array[i] > array[j])
+                    flipped++;
+            }
+        }
+    }
+
+    private void remove(int i, int N, long[] array) {
+        if (i >= 0 && i < N) {
+            int j = right[i];
+            if (j < N) {
+                long[] target = new long[] { array[i] + array[j], i };
+                if (pairSum.contains(target)) {
+                    if (array[i] > array[j])
+                        flipped--;
+                    pairSum.remove(target);
+                }
+            }
+        }
+    }
+
+}
