@@ -1,0 +1,72 @@
+
+1984 Problem:-
+You are given a 0-indexed integer array nums, where nums[i] represents the score of the ith student. You are also given an integer k.
+Pick the scores of any k students from the array so that the difference between the highest and the lowest of the k scores is minimized.
+Return the minimum possible difference.
+
+Example 1:
+Input: nums = [90], k = 1
+Output: 0
+Explanation: There is one way to pick score(s) of one student:
+- [90]. The difference between the highest and lowest score is 90 - 90 = 0.
+The minimum possible difference is 0.
+
+Example 2:
+Input: nums = [9,4,1,7], k = 2
+Output: 2
+Explanation: There are six ways to pick score(s) of two students:
+- [9,4,1,7]. The difference between the highest and lowest score is 9 - 4 = 5.
+- [9,4,1,7]. The difference between the highest and lowest score is 9 - 1 = 8.
+- [9,4,1,7]. The difference between the highest and lowest score is 9 - 7 = 2.
+- [9,4,1,7]. The difference between the highest and lowest score is 4 - 1 = 3.
+- [9,4,1,7]. The difference between the highest and lowest score is 7 - 4 = 3.
+- [9,4,1,7]. The difference between the highest and lowest score is 7 - 1 = 6.
+The minimum possible difference is 2.
+ 
+Constraints:
+1 <= k <= nums.length <= 1000
+
+=======================================================================================================================================================================================
+
+Solution:-
+Intuition:-
+Sort + sliding window of fixed size
+LC said:
+Pick the scores of any k students from the array so that the difference between the highest and the lowest of the k scores is minimized.
+So, apply sliding window of window size k to the sorted data to find the min of diff of highest and the lowest of the k scores.
+
+Approach:-
+let n=|nums|
+if k==1 then return 0 as the early stop for the special case
+sort nums; for decing the time complexity it could be replaced by other custom sorting method. Since the constraints 1 <= k <= nums.length <= 1000, 0 <= nums[i] <= 10^5, counting sort would be inefficient for that.
+Initialize diff=INT_MAX as the returning result
+proceed the single loop as the sliding window of fixed size kas follows: since nums is sorted nums[r]>=nums[l]
+for(int l=0, r=k-1; r<n; r++, l++)
+diff=min(diff, nums[r]-nums[l]);  
+return diff
+Add a Python 1-liner
+For reducing the time complexity, the version of radix sort is applied with 64 buckets in use. 3 rounds will be sufficient to do the sorting task.
+Add a C-version of radix sort implementation
+Add a java version
+
+Complexity:-
+Time complexity:
+O(nlogn)
+radix sort: O(nlog64 ​M) where M=max(nums)
+
+Space complexity:-
+O(∣sort∣)
+0 <= nums[i] <= 105
+
+Code:-
+class Solution {
+    public int minimumDifference(int[] nums, int k) {
+        int n = nums.length;
+        Arrays.sort(nums);
+        int ans = nums[k - 1] - nums[0];
+        for (int i = 0; i + k <= n; i++) {
+            ans = Math.min(ans, nums[i + k - 1] - nums[i]);
+        }
+        return ans;
+    }
+}
