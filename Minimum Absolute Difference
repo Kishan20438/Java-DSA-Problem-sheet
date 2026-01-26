@@ -1,0 +1,81 @@
+
+1200 Problem:-
+Given an array of distinct integers arr, find all pairs of elements with the minimum absolute difference of any two elements.
+Return a list of pairs in ascending order(with respect to pairs), each pair [a, b] follows
+a, b are from arr
+a < b
+b - a equals to the minimum absolute difference of any two elements in arr
+ 
+Example 1:
+Input: arr = [4,2,1,3]
+Output: [[1,2],[2,3],[3,4]]
+Explanation: The minimum absolute difference is 1. List all pairs with difference equal to 1 in ascending order.
+
+Example 2:
+Input: arr = [1,3,6,10,15]
+Output: [[1,3]]
+
+Example 3:
+Input: arr = [3,8,-10,23,19,-4,-14,27]
+Output: [[-14,-10],[19,23],[23,27]]
+ 
+Constraints:
+2 <= arr.length <= 105
+-106 <= arr[i] <= 106
+
+====================================================================================================================================================================================
+
+Solution:-
+Intuition:-
+Think about this, for a small number 1, what number do we take to minimize the absolute difference of both pair?
+Taking the 1000 or 999 will yield a very large difference.
+But taking the smaller number 2 yield a the minimum difference of 1.
+Hence, to minimize the absolute difference of pairs sum, the smallest element must pair with another element:
+Pairing with the largest number produces the maximum difference.
+Otherwise, pairing with the next greater number produces the minimum difference.
+
+Algorithm:-
+Here, we pair 1 element with the next greater element 3:
+We take its difference and set this as the current minimum difference, as well we set the temporary result (as the index of 1 for simplicity).
+After 1 is paired, we can safely ignore this, since each element can only belong to one pair.
+Now, 3 is the smallest and 4 is the next greater number.
+We have a new current minimum difference of 1.
+That means, we have to reset the temporary result as the index of 3 (the new minimum).
+
+Contuining the process...
+In this pair, the difference is 3, but the minimum is 1:
+Thus, we wont record this to the result:
+For the final pair:
+Hence, the correspoding pairs with Minimum Absolute Difference are:
+res=[5[3,4], 2[4,5], 4[8,9]]
+
+Sorting:-
+To make the process more efficient:
+We can sort the array in ascending order to directly access the next greater element.
+Then follow the same process for finding the result.
+
+Time Complexity: O(nlogn)
+Space Complexity: O(n)
+
+Code:-
+class Solution {
+    public List<List<Integer>> minimumAbsDifference(int[] A) {
+        Arrays.sort(A);
+        int n = A.length;
+        int minDiff = Integer.MAX_VALUE;
+        List<List<Integer>> res = new ArrayList<>();
+
+        for (int i = 1; i < n; i++) {
+            int diff = A[i] - A[i - 1];
+            if (diff < minDiff) {
+                minDiff = diff;
+                res = new ArrayList<>();
+                res.add(Arrays.asList(A[i - 1], A[i]));
+            } else if (diff == minDiff) {
+                res.add(Arrays.asList(A[i - 1], A[i]));
+            }
+        }
+
+        return res;
+    }
+}
