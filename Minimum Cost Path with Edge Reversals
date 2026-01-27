@@ -1,0 +1,90 @@
+
+3650 Problem:-
+You are given a directed, weighted graph with n nodes labeled from 0 to n - 1, and an array edges where edges[i] = [ui, vi, wi] represents a directed edge from node ui to node vi with cost wi.
+Each node ui has a switch that can be used at most once: when you arrive at ui and have not yet used its switch, you may activate it on one of its incoming edges vi → ui reverse that edge to ui → vi and immediately traverse it.
+The reversal is only valid for that single move, and using a reversed edge costs 2 * wi.
+Return the minimum total cost to travel from node 0 to node n - 1. If it is not possible, return -1.
+
+Example 1:
+Input: n = 4, edges = [[0,1,3],[3,1,1],[2,3,4],[0,2,2]]
+Output: 5
+Explanation:
+Use the path 0 → 1 (cost 3).
+At node 1 reverse the original edge 3 → 1 into 1 → 3 and traverse it at cost 2 * 1 = 2.
+Total cost is 3 + 2 = 5.
+
+Example 2:
+Input: n = 4, edges = [[0,2,1],[2,1,1],[1,3,1],[2,3,3]]
+Output: 3
+Explanation:
+No reversal is needed. Take the path 0 → 2 (cost 1), then 2 → 1 (cost 1), then 1 → 3 (cost 1).
+Total cost is 1 + 1 + 1 = 3.
+ 
+Constraints:
+2 <= n <= 5 * 104
+1 <= edges.length <= 105
+edges[i] = [ui, vi, wi]
+0 <= ui, vi <= n - 1
+1 <= wi <= 1000
+
+=========================================================================================================================================================================================
+
+Solution:-
+Intuition:-
+The key insight is to transform the problem into a standard shortest path problem. Each node has a switch that can reverse one incoming edge when used. Instead of tracking switch states, we can pre-build a graph where each edge appears twice: the normal direction and a reversed direction with double cost.
+
+Approach:-
+Graph Construction: For each edge (u → v) with cost w:
+Add edge u → v with cost w (normal traversal)
+Add edge v → u with cost 2w (using switch at v to reverse and traverse)
+Dijkstra's Algorithm: Apply standard Dijkstra's algorithm on the transformed graph to find the shortest path from node 0 to node n-1.
+The algorithm automatically chooses whether to use a switch or not based on which path yields the minimum cost.
+
+Complexity:-
+Time complexity:
+O((V+E)logV) where V is the number of nodes and E is the number of edges. This is the standard complexity for Dijkstra's algorithm using a priority queue.
+
+Space complexity:
+O(V+E) for storing the graph and distance array.
+
+Code:-
+class Solution {
+    private static final int INF = Integer.MAX_VALUE / 2;
+    
+    public int minCost(int n, int[][] edges) {
+        var graph = new ArrayList<List<int[]>>();
+        for (int i = 0; i < n; i++) {
+            graph.add(new ArrayList<>());
+        }
+        
+        for (int[] edge : edges) {
+            int from = edge[0], to = edge[1], cost = edge[2];
+            graph.get(from).add(new int[]{to, cost});
+            graph.get(to).add(new int[]{from, cost * 2});
+        }
+        
+        int[] d = new int[n];
+        Arrays.fill(d, INF);
+        d[0] = 0;
+        
+        var q = new PriorityQueue<int[]>((p1, p2) -> 
+            p1[0] == p2[0] ? Integer.compare(p1[1], p2[1]) : Integer.compare(p1[0], p2[0]));
+        q.offer(new int[]{0, 0});
+        
+        while (!q.isEmpty()) {
+            int[] curr = q.poll();
+            int distance = curr[0], from = curr[1];
+            if (distance > d[from]) continue;
+            
+            for (int[] edge : graph.get(from)) {
+                int to = edge[0], cost = edge[1];
+                if (d[to] > d[from] + cost) {
+                    d[to] = d[from] + cost;
+                    q.offer(new int[]{d[to], to});
+                }
+            }
+        }
+        
+        return d[n - 1] == INF ? -1 : d[n - 1];
+    }
+}
