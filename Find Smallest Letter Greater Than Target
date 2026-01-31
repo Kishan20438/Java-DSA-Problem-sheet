@@ -1,0 +1,54 @@
+
+744 Problem:-
+You are given an array of characters letters that is sorted in non-decreasing order, and a character target. There are at least two different characters in letters.
+Return the smallest character in letters that is lexicographically greater than target. If such a character does not exist, return the first character in letters.
+
+Example 1:
+Input: letters = ["c","f","j"], target = "a"
+Output: "c"
+Explanation: The smallest character that is lexicographically greater than 'a' in letters is 'c'.
+
+Example 2:
+Input: letters = ["c","f","j"], target = "c"
+Output: "f"
+Explanation: The smallest character that is lexicographically greater than 'c' in letters is 'f'.
+
+Example 3:
+Input: letters = ["x","x","y","y"], target = "z"
+Output: "x"
+Explanation: There are no characters in letters that is lexicographically greater than 'z' so we return letters[0].
+ 
+
+Constraints:-
+2 <= letters.length <= 104
+letters[i] is a lowercase English letter.
+letters is sorted in non-decreasing order.
+letters contains at least two different characters.
+target is a lowercase English letter.
+
+=======================================================================================================================================================================================
+
+Solution:-
+Intuition
+The core intuition behind the problem relies on the sorted property of the input array:
+Sorted Order: Because the characters are already arranged from smallest to largest (non-decreasing), we don't need to search randomly.
+First Match Wins: The moment we encounter a character that is strictly greater than the target, we know it is the smallest valid candidate.
+We don't need to check any further elements because any subsequent character will be equal to or larger than the one we just found.
+Circular Wrap-around: If we check every character and none are greater than the target, it implies the target is the "largest" (or equal to the largest) in the sequence. 
+In this specific circular scenario, the answer defaults to the first element (the smallest in the array).
+
+Complexity Analysis
+Time Complexity: O(N) in Linear Search, O(logN) in Binary Search
+Space Complexity: O(1)
+
+Code:-
+class Solution {
+    public char nextGreatestLetter(char[] letters, char target) {
+        for(char ch : letters){
+            if(ch > target){
+                return ch;
+            }
+        }
+        return letters[0];
+    }
+}
