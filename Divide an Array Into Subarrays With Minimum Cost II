@@ -1,0 +1,217 @@
+
+3013 Problem:-
+You are given a 0-indexed array of integers nums of length n, and two positive integers k and dist.
+The cost of an array is the value of its first element. For example, the cost of [1,2,3] is 1 while the cost of [3,4,1] is 3.
+You need to divide nums into k disjoint contiguous subarrays, such that the difference between the starting index of the second subarray and the starting index of the kth subarray should be less than or equal to dist. In other words, 
+if you divide nums into the subarrays nums[0..(i1 - 1)], nums[i1..(i2 - 1)], ..., nums[ik-1..(n - 1)], then ik-1 - i1 <= dist.
+Return the minimum possible sum of the cost of these subarrays.
+
+Example 1:
+Input: nums = [1,3,2,6,4,2], k = 3, dist = 3
+Output: 5
+Explanation: The best possible way to divide nums into 3 subarrays is: [1,3], [2,6,4], and [2]. This choice is valid because ik-1 - i1 is 5 - 2 = 3 which is equal to dist. The total cost is nums[0] + nums[2] + nums[5] which is 1 + 2 + 2 = 5.
+It can be shown that there is no possible way to divide nums into 3 subarrays at a cost lower than 5.
+
+Example 2:
+Input: nums = [10,1,2,2,2,1], k = 4, dist = 3
+Output: 15
+Explanation: The best possible way to divide nums into 4 subarrays is: [10], [1], [2], and [2,2,1]. This choice is valid because ik-1 - i1 is 3 - 1 = 2 which is less than dist. The total cost is nums[0] + nums[1] + nums[2] + nums[3] which is 10 + 1 + 2 + 2 = 15.
+The division [10], [1], [2,2,2], and [1] is not valid, because the difference between ik-1 and i1 is 5 - 1 = 4, which is greater than dist.
+It can be shown that there is no possible way to divide nums into 4 subarrays at a cost lower than 15.
+
+Example 3:
+Input: nums = [10,8,18,9], k = 3, dist = 1
+Output: 36
+Explanation: The best possible way to divide nums into 4 subarrays is: [10], [8], and [18,9]. This choice is valid because ik-1 - i1 is 2 - 1 = 1 which is equal to dist.The total cost is nums[0] + nums[1] + nums[2] which is 10 + 8 + 18 = 36.
+The division [10], [8,18], and [9] is not valid, because the difference between ik-1 and i1 is 3 - 1 = 2, which is greater than dist.
+It can be shown that there is no possible way to divide nums into 3 subarrays at a cost lower than 36.
+ 
+Constraints-
+3 <= n <= 105
+1 <= nums[i] <= 109
+3 <= k <= n
+k - 2 <= dist <= n - 2
+
+=========================================================================================================================================================================
+
+Solution:-
+Key idea:-
+The key idea is to fix a position i>0 and assume that in the optimal solution the first subarray starts at position 0, the second subarray starts at position ≥i, while the last, k-th, subarray starts before position i+dist.
+In other words, we have a range of positions [i,i+dist] from which we can choose the starts of the 2nd, 3rd, ... k-th subarray.
+Obviously the most optimal choice is to choose the smallest k−1 elements in the range(subarray of nums) [i,i+dist]
+Notice that if we do this for each i, the range is simply a window that is moving, and we are interested in the k−1th lowest elements in that window.
+
+The rest of the solution is how to do this efficiently.
+Lowest K elements in a sliding window
+We need to be able to have a window of some fixed size, let's say w elements, and keep track of the sum of the smallest k elements in the window(we would assume k≤w).
+To be able to do this efficiently, we would maintain two sets - more correctly, multisets.
+In the first set - let's call it low - we would maintain the lowest k elements in the window.
+In the second set - let's call it high - we would keep the other w−k elements.
+Usually, when doing a sliding window, we need some data structure that would efficiently do two types of operations:
+add() - when expanding the window to the right, we need to be able to insert an element x in the window.
+remove() - at the same time, we need to shrink the window from the left, i.e., remove an element x from the window.
+The key element in implementing this structure is how we balance the low and high sets; i.e., we want the low set to have exactly k elements when the window has size ≥k.
+
+For this reason we are introducing the function rebalance():
+
+void rebalance() {
+    int need = min(K, windowSize());
+    //if we have more elements in low set than needed,
+    //we transfer the highest ones into the high set
+    while((int)low.size() > need){
+        auto it = prev(low.end());
+        int x = *it;
+        low.erase(it);
+        sumLow -= x;
+        high.insert(x);
+    }
+    //if we have less elements than needed in the low set,
+    //we transfer the lowest ones from high set into the low set
+    while((int)low.size() < need && !high.empty()){
+        auto it = high.begin();
+        int x = *it;
+        high.erase(it);
+        low.insert(x);
+        sumLow += x;
+    }
+}
+Note that we keep sumLow, which is the sum of the elements in the low set. Every time we add an element to the set low, 
+we increase the sum; every time we remove an element, we decrease the sum.
+The add function is quite simple now to implement:
+
+void add(int x){
+    if(low.empty() || x <= *prev(low.end())){
+        low.insert(x);
+        sumLow += x;
+    }
+    else{
+        high.insert(x);
+    }
+    rebalance();
+}
+If the value x that we are trying to insert is smaller than or equal to the maximum element in the low set, x should definitely be inserted into the low set; otherwise, 
+we insert it into the high set. This way, we guarantee that all of the elements in the low set are smaller than the elements in the high set.
+After the insertion, we call the function rebalance to maintain the structure.
+
+The remove function is quite similar:
+
+void remove(int x){
+    auto itLow = low.find(x);
+    if(itLow != low.end()){
+        low.erase(itLow);
+        sumLow -= x;
+    }
+    else{
+        auto itHigh = high.find(x);
+        if(itHigh != high.end()){
+            high.erase(itHigh);
+        }
+    }
+    rebalance();
+}
+We need to check whether the element x we are trying to remove is in the low or high set, and then remove it from the set it is in. After that we call rebalance.
+
+Code:----------------------------------------------------------------------------------------
+class Solution {
+    static class SmartWindow {
+        int K;
+        TreeMap<Integer, Integer> low = new TreeMap<>();
+        TreeMap<Integer, Integer> high = new TreeMap<>();
+        long sumLow = 0;
+        int szLow = 0, szHigh = 0;
+        SmartWindow(int k){
+            this.K = k;
+        }
+        int windowSize(){
+            return szLow + szHigh;
+        }
+        private void addMap(TreeMap<Integer, Integer> mp, int x){
+            mp.put(x, mp.getOrDefault(x, 0) + 1);
+        }
+        private boolean removeMap(TreeMap<Integer, Integer> mp, int x){
+            Integer c = mp.get(x);
+            if (c == null) return false;
+            if (c == 1) mp.remove(x);
+            else mp.put(x, c - 1);
+            return true;
+        }
+        private int popLast(TreeMap<Integer, Integer> mp){
+            int x = mp.lastKey();
+            removeMap(mp, x);
+            return x;
+        }
+        private int popFirst(TreeMap<Integer, Integer> mp){
+            int x = mp.firstKey();
+            removeMap(mp, x);
+            return x;
+        }
+        void rebalance(){
+            int need = Math.min(K, windowSize());
+            while(szLow > need){
+                int x = popLast(low);
+                szLow --;
+                sumLow -= x;
+                addMap(high, x);
+                szHigh ++;
+            }
+            while(szLow < need && szHigh > 0){
+                int x = popFirst(high);
+                szHigh --;
+                addMap(low, x);
+                szLow ++;
+                sumLow += x;
+            }
+        }
+        void add(int x){
+            if(szLow == 0){
+                addMap(low, x);
+                szLow ++;
+                sumLow += x;
+            }
+            else{
+                int mxLow = low.lastKey();
+                if(x <= mxLow){
+                    addMap(low, x);
+                    szLow ++;
+                    sumLow += x;
+                }
+                else {
+                    addMap(high, x);
+                    szHigh ++;
+                }
+            }
+            rebalance();
+        }
+        void remove(int x){
+            if(removeMap(low, x)){
+                szLow --;
+                sumLow -= x;
+            }
+            else if(removeMap(high, x)){
+                szHigh --;
+            }
+            rebalance();
+        }
+        long query(){
+            return sumLow;
+        }
+    }
+
+    public long minimumCost(int[] nums, int k, int dist) {
+        int n = nums.length;
+        k -= 1;
+        SmartWindow window = new SmartWindow(k);
+
+        for(int i = 1; i <= 1 + dist; i ++){
+            window.add(nums[i]);
+        }
+        long ans = window.query();
+
+        for(int i = 2; i + dist < n; i ++){
+            window.remove(nums[i - 1]);
+            window.add(nums[i + dist]);
+            ans = Math.min(ans, window.query());
+        }
+        return ans + nums[0];
+    }
+}
