@@ -1,0 +1,85 @@
+
+1653 Problem:-
+You are given a string s consisting only of characters 'a' and 'b'​​​​.
+You can delete any number of characters in s to make s balanced. s is balanced if there is no pair of indices (i,j) such that i < j and s[i] = 'b' and s[j]= 'a'.
+Return the minimum number of deletions needed to make s balanced.
+
+Example 1:-
+Input: s = "aababbab"
+Output: 2
+Explanation: You can either:
+Delete the characters at 0-indexed positions 2 and 6 ("aababbab" -> "aaabbb"), or
+Delete the characters at 0-indexed positions 3 and 6 ("aababbab" -> "aabbbb").
+
+Example 2:
+Input: s = "bbaaaaabb"
+Output: 2
+Explanation: The only solution is to delete the first two characters.
+
+Constraints:-
+1 <= s.length <= 105
+s[i] is 'a' or 'b'​​.
+
+===========================================================================================================================================================
+
+Solution:-
+Intuition:-
+A balanced string has all ‘‘a" characters appearing before all ‘‘b" characters:
+s=‘‘aaaaabbbbbbbbb"
+Any balanced string can be viewed as having a boundary point where all 'a's are to the left and all 'b's are to the right.
+For the string to be balanced after deletions, we must choose a position where:
+Everything before should be 'a' (delete all 'b's)
+Everything after should be 'b' (delete all 'a's)
+By trying every possible boundary position and computing the deletion cost at each point, we guarantee finding the optimal solution. The deletion cost at position i is simply the sum of:
+All 'b's encountered so far (must delete from left side)
+All 'a's remaining (must delete from right side)
+Since we iterate through all positions, we explore all possible ways to partition the string into an 'a' section and a 'b' section, ensuring we find the minimum deletions needed.
+
+Algorithm:-
+We use two counters a and b:
+deletions= count b ← + count a →
+​where: b = count b ← is count of 'b's to the left of current position i, and a = count a → is 'a's count after the current position.
+(Precomputed in the first pass).
+Simply return the minimum deletions as the result.
+Greedy | 1-pass
+
+Intuition :-
+We process the string from left to right, maintaining the invariant that at any point, we have made the minimum deletions necessary to keep the string balanced up to the current position.
+Let's recognize what causes imbalance:
+whenever we encounter an 'a' after having seen 'b's, we have a violation.
+(Since 'a' must come before 'b' in a balanced string.)
+When we encounter an 'a' after seeing 'b's, we face a choice:
+Delete the current 'a'
+Delete one of the previous 'b's
+Both options fix the immediate violation. The greedy decision is to always make one deletion when this situation occurs, and reduce our 'b' count by 1.
+This is optimal because:
+We defer the decision of which specific character to delete
+By decrementing the 'b' counter, we effectively cancel out one 'b' with one 'a'
+This ensures we never delete more than necessary
+The counter b represents the number of 'b's that could potentially cause future violations.
+Each time we see a problematic 'a':
+We resolve one violation and reduce the problem size by 1.
+
+Complexity:-
+Time Complexity: O(n)
+Space Complexity: O(1)
+
+Code:-
+class Solution {
+    public int minimumDeletions(String s) {
+        int n = s.length(), res = n;
+        int a = 0, b = 0;
+
+        for (int i = 0; i < n; i++)
+            a += s.charAt(i) & 1;
+
+        for (int i = 0; i < n; i++) {
+            int c = s.charAt(i);
+            a -= c & 1;
+            res = Math.min(res, a + b);
+            b += (c & 1) ^ 1;
+        }
+
+        return res;
+    }
+}
