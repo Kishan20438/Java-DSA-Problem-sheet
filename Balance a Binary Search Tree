@@ -1,0 +1,69 @@
+
+1382 Problem:-
+Given the root of a binary search tree, return a balanced binary search tree with the same node values. If there is more than one answer, return any of them.
+A binary search tree is balanced if the depth of the two subtrees of every node never differs by more than 1.
+
+Example 1:-
+Input: root = [1,null,2,null,3,null,4,null,null]
+Output: [2,1,3,null,null,null,4]
+Explanation: This is not the only correct answer, [3,1,4,null,2] is also correct.
+
+Example 2:-
+Input: root = [2,1,3]
+Output: [2,1,3]
+ 
+Constraints:-
+The number of nodes in the tree is in the range [1, 104].
+1 <= Node.val <= 105
+
+====================================================================================================================================================================
+
+Solution:-
+Intuition:-
+A Binary Search Tree (BST) has an important property:
+Inorder traversal of a BST always produces values in sorted order.
+So instead of trying to balance the tree directly, we can:
+Extract all node values in sorted order.
+Build a new balanced BST from those sorted values.
+To make a BST balanced, we should always choose the middle element as the root.
+This ensures:
+Left subtree and right subtree have almost equal number of nodes.
+Height difference between subtrees is at most 1.
+
+Approach:-
+Perform inorder traversal of the BST.
+Store all node values in a list.
+Since it is a BST, the list will be in sorted order.
+Use divide and conquer to build a new tree from the sorted list.
+Pick the middle element of the list as the root.
+Recursively build the left subtree using the left half of the list.
+Recursively build the right subtree using the right half of the list.
+Continue this process until all elements are used.
+Return the newly constructed balanced BST.
+
+Complexity:-
+Time complexity: O(N)
+Space complexity:O(N)
+
+Code:-
+class Solution {
+    public void inorder(TreeNode node, List<Integer> vals) {
+        if (node == null) return;
+        inorder(node.left, vals);
+        vals.add(node.val);
+        inorder(node.right, vals);
+    }
+    public TreeNode build(List<Integer> vals, int l, int r) {
+        if (l > r) return null;
+        int mid = (l + r) / 2;
+        TreeNode node = new TreeNode(vals.get(mid));
+        node.left  = build(vals, l, mid - 1);
+        node.right = build(vals, mid + 1, r);
+        return node;
+    }
+    public TreeNode balanceBST(TreeNode root) {
+        List<Integer> vals = new ArrayList<>();
+        inorder(root, vals);
+        return build(vals, 0, vals.size() - 1);
+    }
+}
