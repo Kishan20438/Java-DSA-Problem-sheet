@@ -1,4 +1,4 @@
- 
+  
 3721 Problem:-
 You are given an integer array nums.
 A subarray is called balanced if the number of distinct even numbers in the subarray is equal to the number of distinct odd numbers.
