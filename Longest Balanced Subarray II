@@ -1,0 +1,226 @@
+
+3721 Problem:-
+You are given an integer array nums.
+A subarray is called balanced if the number of distinct even numbers in the subarray is equal to the number of distinct odd numbers.
+Return the length of the longest balanced subarray.
+
+Example 1:
+Input: nums = [2,5,4,3]
+Output: 4
+Explanation:
+The longest balanced subarray is [2, 5, 4, 3].
+It has 2 distinct even numbers [2, 4] and 2 distinct odd numbers [5, 3]. Thus, the answer is 4.
+
+Example 2:
+Input: nums = [3,2,2,5,4]
+Output: 5
+Explanation:
+The longest balanced subarray is [3, 2, 2, 5, 4].
+It has 2 distinct even numbers [2, 4] and 2 distinct odd numbers [3, 5]. Thus, the answer is 5.
+
+Example 3:
+Input: nums = [1,2,3,2]
+Output: 3
+Explanation:-
+The longest balanced subarray is [2, 3, 2].
+It has 1 distinct even number [2] and 1 distinct odd number [3]. Thus, the answer is 3.
+ 
+Constraints:-
+1 <= nums.length <= 105
+1 <= nums[i] <= 105
+
+==================================================================================================================================================================
+
+Solution:-
+THE ESSENCE OF THE PROBLEM
+We have an array of integers and need to find the longest subarray where the number of distinct even numbers equals the number of distinct odd numbers. 
+It's like trying to find the longest segment where we have a perfect balance between unique evens and unique odds.
+Key Insight: We can convert each number to a "contribution" value: +1 if it's a new even, -1 if it's a new odd, and 0 if we've seen this number before. 
+Then we're looking for the longest subarray where the sum of these contributions equals 0.
+Think of it like a game where you're walking through a hallway, collecting colored marbles (evens in one pocket, odds in another).
+You only count unique marbles, and you're trying to find the longest stretch where both pockets end up with the same number of unique marbles.
+
+EXAMPLES OF WORK:-
+💠 Example 1:
+nums = [2,5,4,3]
+Analysis:
+Position 0: 2 (even, first time) → +1
+Position 1: 5 (odd, first time) → -1
+Position 2: 4 (even, first time) → +1
+Position 3: 3 (odd, first time) → -1
+Subarray [2,5,4,3]: +1 -1 +1 -1 = 0 ✓
+Answer: 4
+
+💠 Example 2:
+nums = [3,2,2,5,4]
+Analysis:
+Position 0: 3 (odd, first time) → -1
+Position 1: 2 (even, first time) → +1
+Position 2: 2 (even, seen before) → 0
+Position 3: 5 (odd, first time) → -1
+Position 4: 4 (even, first time) → +1
+Subarray [3,2,2,5,4]: -1 +1 +0 -1 +1 = 0 ✓
+Answer: 5
+
+💠 Example 3:
+nums = [1,2,3,2]
+Analysis:
+Subarray [1,2,3]: -1 +1 -1 = -1 ✗
+Subarray [2,3,2]: +1 -1 +0 = 0 ✓
+Answer: 3
+
+LINE-BY-LINE EXPLANATION OF THE CODE
+STEP 1: SEGMENT TREE DATA STRUCTURE
+class SegmentTree {
+    public int n, size;
+    public int[] sum, mn, mx;
+What's happening here:
+We're creating a custom Segment Tree that stores three things for each segment:
+sum: Total sum of values in the segment
+mn: Minimum prefix sum possible in the segment
+mx: Maximum prefix sum possible in the segment
+This helps us answer: "Is there a prefix in this segment that sums to X?"
+Why this structure? Imagine you're keeping track of a bank account. You want to know: at any point in a given period, did the balance ever hit exactly $0? The mn and mx tell you the range of possible balances, so you can quickly check if $0 is achievable.
+
+STEP 2: BUILDING AND UPDATING THE TREE
+What's happening here:
+The pull method combines information from two child nodes
+sum[node] = sum[left] + sum[right] → Total is sum of both halves
+mn[node] = min(mn[left], sum[left] + mn[right]) → The minimum can be either in the left half, or somewhere in the right half after adding the left sum
+Similarly for maximum
+Analogy: Like checking the lowest and highest water levels in two connected ponds. The lowest could be in the first pond, or in the second pond after accounting for the water flowing from the first.
+
+STEP 3: UPDATING SINGLE VALUES
+What's happening here:
+We walk down the tree to find the leaf node corresponding to index idx
+Store the path taken (all parent nodes visited)
+Update the leaf with the new value
+Walk back up the path, recalculating all parent nodes using pull()
+Why store the path? Because in a segment tree, changing one leaf affects all its ancestors. We need to update them bottom-up.
+
+STEP 4: FINDING THE RIGHTMOST ZERO BALANCE
+What's happening here:
+We're searching for the rightmost index where prefix sum equals target (usually 0)
+At each step, we check the right child first (because we want rightmost)
+sum_before_right: The total sum if we take the entire left child
+need_right: What we need from the right child to reach our target
+If the right child's range [mn, mx] contains need_right, we can find it there
+Otherwise, we look in the left child
+Analogy: Like trying to reach a specific floor in a building with two elevators. You check if the right elevator can take you to the remaining floors needed. If yes, take it; otherwise, take the left elevator and adjust your expectations.
+
+STEP 5: MAIN ALGORITHM - PROCESSING FROM RIGHT TO LEFT
+What's happening here:
+Process from right to left: We fix the left boundary l and find the best right boundary
+Track first occurrences: first[num] stores where we last saw each number (from the right)
+Update previous occurrences: If we've seen this number before (to the right), set its contribution to 0 (not distinct anymore)
+Update current position: +1 for even, -1 for odd (first time seeing it from this left)
+Find longest balanced: Look for the rightmost index where total sum = 0
+Update answer: Track the maximum length found
+Why process right-to-left? Because when we move left, we're extending the subarray to the right. Any number we've seen before (to the right of current position) is no longer distinct from this new left perspective.
+
+KEY TAKEAWAYS:-
+Convert to prefix sum problem: By assigning +1/-1 for new evens/odds and 0 for repeats, we reduce the problem to finding the longest subarray with sum 0.
+Segment tree for range queries: We need to quickly answer "is there a prefix in this range that sums to X?" The segment tree stores min/max prefix sums to answer this efficiently.
+Process from the end: Moving from right to left lets us maintain which numbers are "new" from the current starting point.
+Clever updates: When a number appears again to the left, we mark its previous occurrence as 0 because it's no longer distinct in the extended subarray.
+
+Code:-
+class SegmentTree {
+    public int n, size;
+    public int[] sum, mn, mx;
+
+    SegmentTree(int n) {
+        this.n = n;
+        this.size = 4 * n;
+        this.sum = new int[size];
+        this.mn  = new int[size];
+        this.mx  = new int[size];
+    }
+
+    void pull(int node) {
+        int l = node * 2, r = node * 2 + 1;
+
+        sum[node] = sum[l] + sum[r];
+        mn[node] = Math.min(mn[l], sum[l] + mn[r]);
+        mx[node] = Math.max(mx[l], sum[l] + mx[r]);
+    }
+
+    void update(int idx, int val) {
+        int node = 1, l = 0, r = n - 1, index = 0;
+        int[] path = new int[32]; 
+
+        while (l != r) {
+            path[index++] = node;
+            int m = l + (r - l) / 2;
+            if (idx <= m) {
+                node = node * 2;
+                r = m;
+            } else {
+                node = node * 2 + 1;
+                l = m + 1;
+            }
+        }
+
+        sum[node] = val;
+        mn[node] = val;
+        mx[node] = val;
+
+        while (index > 0) {
+            pull(path[--index]);
+        }
+    }
+
+    int find_rightmost_prefix(int target) {
+        int node = 1, l = 0, r = n - 1, sum_before = 0;
+
+        if (target < mn[node] || target > mx[node]) return -1;
+
+        while (l != r) {
+            int m = l + (r - l) / 2;
+            int lchild = node * 2, rchild = node * 2 + 1;
+
+            int sum_before_right = sum[lchild] + sum_before;
+            int need_right = target - sum_before_right;
+
+            if (mn[rchild] <= need_right && need_right <= mx[rchild]) {
+                node = rchild;
+                l = m + 1;
+                sum_before = sum_before_right;
+            } else {
+                node = lchild;
+                r = m;
+            }
+        }
+
+        return l;
+    }
+}
+
+class Solution {
+    public int longestBalanced(int[] nums) {
+        int n = nums.length;
+        SegmentTree s_tree = new SegmentTree(n);
+    
+        int[] first = new int[100001]; 
+        Arrays.fill(first, -1);
+        
+        int result = 0;
+        for (int l = n - 1; l >= 0; --l) {
+            int num = nums[l];
+            
+            if (first[num] != -1) {
+                s_tree.update(first[num], 0);
+            }
+            first[num] = l;
+            
+            s_tree.update(l, (num & 1) == 0 ? 1 : -1); 
+            
+            int r = s_tree.find_rightmost_prefix(0);
+            if (r >= l) {
+                result = Math.max(result, r - l + 1);
+            }
+        }
+        
+        return result;
+    }
+}
