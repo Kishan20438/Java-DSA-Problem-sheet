@@ -1,0 +1,99 @@
+
+3713 Problem:-
+You are given a string s consisting of lowercase English letters.
+A substring of s is called balanced if all distinct characters in the substring appear the same number of times.
+Return the length of the longest balanced substring of s.
+
+Example 1:
+Input: s = "abbac"
+Output: 4
+Explanation:
+The longest balanced substring is "abba" because both distinct characters 'a' and 'b' each appear exactly 2 times.
+
+Example 2:
+Input: s = "zzabccy"
+Output: 4
+Explanation:
+The longest balanced substring is "zabc" because the distinct characters 'z', 'a', 'b', and 'c' each appear exactly 1 time.
+​​​​​​​
+Example 3:
+Input: s = "aba"
+Output: 2
+Explanation:
+​​​​​​​One of the longest balanced substrings is "ab" because both distinct characters 'a' and 'b' each appear exactly 1 time. Another longest balanced substring is "ba".
+
+Constraints:-
+1 <= s.length <= 1000
+s consists of lowercase English letters.
+
+===============================================================================================================================================================
+
+Solution:-
+Intuition:-
+Balanced substring is a substring where all unique characters have the same frequency.
+So we can keep track of number of unique characters uniq in a window and maximum frequency maxfreq and then if string is balanced every character has a frequency = maxfreq and len of window is cur = uniq * maxfreq.
+This is the criteria of balanced substring.
+Using this criteria we can iterate over all possible substrings s[l..r], calculate uniq and maxfreq and find maximum across all balanced substrings.
+
+Approach:-
+The question is how to calculate uniq and maxfreq efficiently.
+First we will iterate over left index of the substring l
+for l in range(n):
+Then we will iterate over right index of the substring r and keep track of counts of every char, number of unique chars and max frequency
+cnt = [0] * 26  # Counts of every char
+uniq = maxfreq = 0  # Number of uniq chars and max frequency
+for r in range(l, n)
+Then to efficiently update uniq and maxfreq we will use the fact that our substring is only increasing. So if for current char i cnt[i] == 0, then it's a new unique char and we update uniq
+uniq += cnt[i] == 0
+Then we update cnt[i] and check if a new value is bigger then maxfreq, then update maxfreq
+cnt[i] += 1
+if cnt[i] > maxfreq:  # Update max frequency
+    maxfreq = cnt[i]
+Now we have uniq and maxfreq updated we check our balanced substring criteria and try to update the result
+cur = r - l + 1
+if uniq * maxfreq == cur and cur > result:result = cur
+
+Complexity:-
+C — size of the alphabet = 26 by description
+Time complexity: O(n 2+nC) = O(n 2)
+Space complexity: O(C) = O(1)
+
+Code:-
+class Solution {
+    public int longestBalanced(String s) {
+        int n = s.length();
+
+        // Transform char -> int
+        int[] a = new int[n];
+        for (int i = 0; i < n; i++) 
+            a[i] = s.charAt(i) - 'a';
+
+        int result = 0;
+        for (int l = 0; l < n; l++) {
+            // Early exit, can't be bigger
+            if (n - l <= result) 
+                break;
+
+            int[] cnt = new int[26]; // Counts of every char
+            int uniq = 0, maxfreq = 0; // Number of uniq chars and maximum frequency
+            for (int r = l; r < n; r++) {
+                int i = a[r];
+
+                // There was no this char before => one more uniq
+                if (cnt[i] == 0) 
+                    uniq++;
+
+                cnt[i]++;
+                // Update max frequency
+                if (cnt[i] > maxfreq) 
+                    maxfreq = cnt[i];
+
+                // Check if all uniq chars have maxfreq frequency then update the result
+                int cur = r - l + 1;
+                if (uniq * maxfreq == cur && cur > result)
+                    result = cur;
+            }
+        }
+        return result;
+    }
+}
