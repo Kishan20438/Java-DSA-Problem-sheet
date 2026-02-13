@@ -1,0 +1,172 @@
+
+3714 Problem:-
+You are given a string s consisting only of the characters 'a', 'b', and 'c'.
+A substring of s is called balanced if all distinct characters in the substring appear the same number of times.
+Return the length of the longest balanced substring of s.
+
+Example 1:
+Input: s = "abbac"
+Output: 4
+Explanation:
+The longest balanced substring is "abba" because both distinct characters 'a' and 'b' each appear exactly 2 times.
+
+Example 2:
+Input: s = "aabcc"
+Output: 3
+Explanation:
+The longest balanced substring is "abc" because all distinct characters 'a', 'b' and 'c' each appear exactly 1 time.
+
+Example 3:-
+Input: s = "aba"
+Output: 2
+Explanation:
+One of the longest balanced substrings is "ab" because both distinct characters 'a' and 'b' each appear exactly 1 time. Another longest balanced substring is "ba".
+
+Constraints:-
+1 <= s.length <= 105
+s contains only the characters 'a', 'b', and 'c'.
+
+================================================================================================================================================================
+
+Solution:-
+THE ESSENCE OF THE PROBLEM
+We have a string containing only 'a', 'b', and 'c'. We need to find the length of the longest balanced substring – where "balanced" means:
+All characters are the same – any run of identical letters counts (e.g., "aaa" is balanced because it's just one kind of letter).
+Exactly two different letters appear, and their counts are equal – the third letter is completely absent in that substring (e.g., "aabb").
+All three letters appear, and their counts are equal – classic "equal number of a, b, c" (e.g., "abcabc").
+Key Insight: Instead of trying to detect all three cases in one complicated sweep, we split the problem into three independent sub‑problems. Each sub‑problem has its own efficient O(n) solution. Then we just take the maximum of all results.
+
+EXAMPLES OF WORK:-
+💠 Example 1: s = "abbac"
+One char: longest run of 'a' = 1, of 'b' = 2, of 'c' = 1 → max = 2.
+Two chars: (a,b) → substring "abba" has 2 a’s and 2 b’s, length 4 → 4.
+Three chars: "bac" has one each, length 3.
+Answer: 4.
+
+💠 Example 2: s = "caabcc"
+One char: "aa" (2), "cc" (2) → max = 2.
+Two chars: (a,c) → "aac" no, "caac"? Actually "caac" has 2 a, 1 c → not equal. Best is "caabcc"? Let's trust code.
+Three chars: "abc" not present, but "aabcc"? Wait, code will find something.
+Answer: from one char maybe 2, from two char maybe 2, from three char maybe 3? We’ll trust algorithm.
+
+💠 Example 3: s = "abcabcabc"
+One char: 1 (no runs longer than 1).
+Two chars: any substring with only two letters? Possibly "abab"? Not contiguous. The whole string uses all three.
+Three chars: the whole string has equal counts (3 each) → length 9.
+Answer: 9.
+LINE-BY-LINE EXPLANATION OF THE CODE
+
+STEP 1 – LONGEST RUN OF A SINGLE LETTER
+What’s happening here:
+We keep three independent counters – one for each letter. At each position, if the current character continues the previous one, we increment its counter; otherwise we reset it to 1. No counter interferes with another. 
+This is the cleanest way – no need to reset all counters when you see a different letter, because a run of 'a' doesn’t care that a 'b' appeared somewhere else. We simply track each letter’s current streak and keep the maximum.
+Why this is better: Earlier attempts often tried to manage one generic len variable and reset it for every change – that fails because you can’t simultaneously track streaks for three letters in one variable. Here we treat them separately, which is both correct and easy to read.
+
+STEP 2 – EXACTLY TWO LETTERS, EQUAL COUNTS
+What’s happening here:
+We scan the string and treat it as a sequence of segments that contain only the two letters we care about (x and y). Each segment is delimited by the appearance of the third letter (or the ends). Within a segment, we maintain a running difference (count_x - count_y).
+Whenever this difference repeats, the substring between the two occurrences has equal numbers of x and y.
+We keep an array first[diff] to remember the earliest position where a given difference appeared within the current segment. When we encounter a forbidden letter, we reset the array logically by setting clear_idx – then any first[diff] that is older than clear_idx is considered invalid (we check first[diff] < clear_idx).
+Why an array? Since the difference ranges from -n to +n, we can map it to an array index by adding n. This gives O(1) access without hashing. The array is reused, but we don’t need to clear it entirely because the clear_idx trick makes old entries invisible.
+Key nuance: We don’t actually reset the whole array at each segment start – we just remember that any index stored before the current clear_idx is outdated. That’s why we compare first[diff] < clear_idx. If it’s older, we overwrite it with the current position. If it’s newer or equal, it’s valid and we compute the length.
+
+STEP 3 – ALL THREE LETTERS, EQUAL COUNTS
+What’s happening here:
+We encode the triple (count_a, count_b, count_c) into a single long number. The trick is to pick coefficients that sum to zero:
+count_a * 1_000_001  +  count_b * (-1_000_000)  +  count_c * (-1)
+Because 1_000_001 - 1_000_000 - 1 = 0, whenever the counts are equal, the total cancels out – the state returns to its original value.
+We start with a large arbitrary number (Long.MAX_VALUE/2) to avoid negative overflow, but any constant works. As we traverse the string, we add or subtract these fixed amounts. 
+Every time we see a state we’ve seen before, the substring between the two occurrences has equal numbers of a, b, c.
+Why not just use two differences (a-b, a-c) with an array?
+We could, but that would require a 2D array of size (2n+1)×(2n+1), which for n up to 10⁵ would be 40GB – completely infeasible. A HashMap with a single long key is memory‑efficient and fast.
+
+PUTTING IT ALL TOGETHER
+res = Math.max(res, find2(c, 'a', 'b'));
+res = Math.max(res, find2(c, 'a', 'c'));
+res = Math.max(res, find2(c, 'b', 'c'));
+res = Math.max(res, find3(c));
+We compute the best result from each of the three categories and keep the maximum. Each sub‑routine is linear time, so the whole solution runs in O(n) and uses O(n) auxiliary space (mostly for the difference array in find2 and the hash map in find3).
+
+Code:-
+class Solution {
+    public int longestBalanced(String s) {
+        char[] c = s.toCharArray();
+        int n = c.length;
+        
+        int cur_a = 0, cur_b = 0, cur_c = 0;        
+        int max_a = 0, max_b = 0, max_c = 0;
+
+        for (int i = 0; i < n; i++) {
+            if (c[i] == 'a') {
+                cur_a = (i > 0 && c[i-1] == 'a') ? cur_a + 1 : 1;
+                max_a = Math.max(max_a, cur_a);
+            } else if (c[i] == 'b') {
+                cur_b = (i > 0 && c[i-1] == 'b') ? cur_b + 1 : 1;
+                max_b = Math.max(max_b, cur_b);
+            } else { 
+                cur_c = (i > 0 && c[i-1] == 'c') ? cur_c + 1 : 1;
+                max_c = Math.max(max_c, cur_c);
+            }
+        }
+        
+        int res = Math.max(Math.max(max_a, max_b), max_c);
+        
+        res = Math.max(res, find2(c, 'a', 'b'));
+        res = Math.max(res, find2(c, 'a', 'c'));
+        res = Math.max(res, find2(c, 'b', 'c'));
+        
+        res = Math.max(res, find3(c));
+        
+        return res;
+    }
+    
+    private int find2(char[] c, char x, char y) {
+        int n = c.length, max_len = 0;
+        int[] first = new int[2 * n + 1];
+        Arrays.fill(first, -2);
+        
+        int clear_idx = -1, diff = n;
+        first[diff] = -1;
+        
+        for (int i = 0; i < n; i++) {
+            if (c[i] != x && c[i] != y) {
+                clear_idx = i;
+                diff = n;
+                first[diff] = clear_idx;
+            } else {
+                if (c[i] == x) diff++;
+                else diff--;
+                
+                if (first[diff] < clear_idx) {
+                    first[diff] = i;
+                } else {
+                    max_len = Math.max(max_len, i - first[diff]);
+                }
+            }
+        }
+        
+        return max_len;
+    }
+    
+    private int find3(char[] c) {
+        long state = Long.MAX_VALUE / 2;
+        Map<Long, Integer> first = new HashMap<>();
+        first.put(state, -1);
+    
+        int max_len = 0;
+    
+        for (int i = 0; i < c.length; i++) {
+            if (c[i] == 'a') state += 1_000_001;
+            else if (c[i] == 'b') state -= 1_000_000;
+            else state--;
+        
+            if (first.containsKey(state)) {
+                max_len = Math.max(max_len, i - first.get(state));
+            } else {
+                first.put(state, i);
+            }
+        }
+    
+        return max_len;
+    }
+}
