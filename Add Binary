@@ -1,0 +1,181 @@
+
+67 Problem:-
+Given two binary strings a and b, return their sum as a binary string.
+
+ 
+
+Example 1:
+
+Input: a = "11", b = "1"
+Output: "100"
+Example 2:
+
+Input: a = "1010", b = "1011"
+Output: "10101"
+ 
+
+Constraints:
+
+1 <= a.length, b.length <= 104
+a and b consist only of '0' or '1' characters.
+Each string does not contain leading zeros except for the zero itself.
+
+====================================================================================================================================================================
+
+Solution:-
+Approach 1 | Full-Adder :-
+
+Intuition :-
+
+The problem can be modeled as a binary adder in digital logic circuit.
+A Binary Adder combines bits and propagates a carry to compute the final sum.
+Inside a Full Adder:
+Ripple-Carry Adder
+In this problem, the same mechanism is implemented algorithmically: two binary strings are processed from right to left, 
+just as bits flow through an adder from least significant to most significant position.
+Tip: View in Light Mode for better contrast.
+Logic Circuit Design
+A binary adder operates on simple rules:
+At each position, two input bits and an incoming carry determine two outputs:
+The resulting sum bit and the outgoing carry. The circuit does not require knowledge of earlier bits beyond the carry value.
+In our problem, we maintain only a carry variable while iterating through the strings.
+Each step mimics the behavior of a half adder (two bits) or a full adder (two bits plus carry).
+The task is can be viewed as the simulation of bitwise addition with carry propagation.
+This perspective leads naturally to an efficient linear-time solution that processes digits sequentially and constructs the resulting binary representation.
+Half Adder
+To construct a binary adder, it is necessary to first review the basics of binary addition.
+The most basic case involves adding two single-bit binary values.
+Because binary digits are limited to 0 and 1, combining two bits produces four possible input combinations.
+
+0+0 =0
+0+1 =1
+1+0 =1
+1+1 =10   (sum:0, carry:1)
+​
+Among these outcomes, three combinations generate a single-bit result, while the case where both inputs are 1 produces a two-bit result.
+The logic circuit responsible for performing this single-bit addition is known as a half adder.
+In that scenario, the left bit represents the carry (higher significant bit, HSB), and the right bit represents the sum (lower significant bit, LSB).
+Derivation
+Truth Table (Half Adder)
+Using Karnaugh Map (K-Map), we can derive the boolean expression for the sum and carry:
+CARRY =AB
+SUM = AB + AB
+Note that it is essentially the XOR operation:
+A⊕B= AB+ AB​
+Full Adder
+A full adder is a combinational logic circuit that adds three input bits:
+Two binary digits A, B and an incoming carry C in .
+It generates two outputs: a Sum bit S, and an outgoing carry bit C out
+Truth Table
+By evaluating all possible combinations of A, B, and incoming carry C, the corresponding truth table is obtained as follows.
+Derivation
+Similarly, we can use K−Map to derive the boolean expression for S and C out
+
+Sum
+Recall: A⊕B= AB + AB
+S =ABC+ ABC+ABC+ ABC
+=C(AB+ AB)+ C( AB+A B)
+=C( AB+A  B)+ C( AB+A B )
+=C( A⊕B)+ C(A⊕B)
+S = A⊕B⊕C
+​
+Carry (output)
+C out = ABC+A BC+AB C+ABC
+    =( AB+A B)C+AB( C+C)
+    = (A⊕B)C+AB .
+​
+
+Essentially, we find the larger string, then simulate the binary adder process.
+Then, we find the sum bit and the output carry bit for each index, until we processed the whole string.
+The full adder logic makes it easier to find the result.
+
+Time Complexity: O(max(n 1,n 2))
+Space Complexity: O(max(n 1,n 2))
+
+Code:-
+
+class Solution {
+    public String addBinary(String a, String b) {
+        int n1 = a.length(), n2 = b.length();
+        int max = Math.max(n1, n2);
+        int C = 0, i = 0;
+
+        StringBuilder sb = new StringBuilder();
+
+        while (i < max || C > 0) {
+            int A = i < n1 ? a.charAt(n1 - 1 - i) - '0' : 0;
+            int B = i < n2 ? b.charAt(n2 - 1 - i) - '0' : 0;
+
+            int S = (A ^ B) ^ C;
+            int C_out = ((A ^ B) & C) | (A & B);
+
+            sb.append((char)(S + '0'));
+            C = C_out;
+
+            i++;
+        }
+
+        return sb.reverse().toString();
+    }
+}
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+Approach 2 | Bit Manipulation | BigInteger :-
+Instead of manually computing the sum bit by bit:
+We can utilize the bitwise XOR operation, which identifies all differing bits between a and b.
+From Approach 1, we know that it also produces the binary sum (but without carry propagation).
+a =1111
+b =0010
+a⊕b =1101
+​​
+To find the carry, we compute it directly using bitwise AND and left shift operator:
+a =  1111
+b =  0010
+a⊕b =  1101
+(a & b)≪1 =00100=carry
+​
+This reduces the task to repeatedly combining:
+the partial sum without carry, and
+the carry itself.
+Since this is equivalent to adding two integers, we can write the algorithm for this process:
+
+Algorithm :-
+Convert a and b into integers x and y, x will be used to keep an answer, and y for the carry.
+
+While carry is nonzero:
+Current answer without carry is XOR of x and y:
+answer=x⊕y
+​
+Current carry is left-shifted AND of x and y: .
+carry=(x & y)≪1
+​
+Job is done, prepare the next loop:
+x =answer
+y =carry
+​​
+Return x in the binary form.
+Time Complexity: O(n)
+Space Complexity: O(n)
+
+Code :-
+import java.math.BigInteger;
+
+class Solution {
+    public String addBinary(String a, String b) {
+        BigInteger x = new BigInteger(a, 2);
+        BigInteger y = new BigInteger(b, 2);
+        BigInteger zero = new BigInteger("0", 2);
+        BigInteger carry, answer;
+
+        while (y.compareTo(zero) != 0) {
+            answer = x.xor(y);
+            carry = x.and(y).shiftLeft(1);
+            x = answer;
+            y = carry;
+        }
+
+        return x.toString(2);
+    }
+}
+
