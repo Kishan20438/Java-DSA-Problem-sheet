@@ -1,0 +1,73 @@
+
+401 Problem:-
+A binary watch has 4 LEDs on the top to represent the hours (0-11), and 6 LEDs on the bottom to represent the minutes (0-59). 
+Each LED represents a zero or one, with the least significant bit on the right.
+For example, the below binary watch reads "4:51".
+Given an integer turnedOn which represents the number of LEDs that are currently on (ignoring the PM), return all possible times the watch could represent. 
+You may return the answer in any order.
+The hour must not contain a leading zero.
+For example, "01:00" is not valid. It should be "1:00".
+The minute must consist of two digits and may contain a leading zero.
+For example, "10:2" is not valid. It should be "10:02".
+ 
+Example 1:-
+Input: turnedOn = 1
+Output: ["0:01","0:02","0:04","0:08","0:16","0:32","1:00","2:00","4:00","8:00"]
+
+Example 2:-
+Input: turnedOn = 9
+Output: []
+ 
+Constraints:-
+0 <= turnedOn <= 10
+
+=================================================================================================================================================================
+
+Solution:-
+Here is the end-to-end explanation and the updated Markdown structure for LeetCode 401: Binary Watch.
+Understanding the Problem:-
+The problem asks us to find all possible times (Hours:Minutes) on a "Binary Watch" given a specific number of LEDs that are currently lit (turnedOn).
+The Watch:
+Hours (Top Row): 4 LEDs representing binary values 8, 4, 2, 1.
+Minutes (Bottom Row): 6 LEDs representing binary values 32, 16, 8, 4, 2, 1.
+
+Constraints:-
+Hours must be between 0-11.
+Minutes must be between 0-59.
+We need to format the output correctly (e.g., "3:02", not "3:2").
+
+💡 Core Intuition:-
+There are two main ways to solve this:
+
+Backtracking: "Turn on" LEDs one by one recursively until we reach the turnedOn count, then check if the time is valid.
+Iterative (Read all times): Since a watch only has a limited number of valid times (12 hours * 60 minutes = 720 combinations), we can simply look at every possible time (e.g., 0:00, 0:01... 11:59) 
+and count how many LEDs are required to display that time. If the bit count matches turnedOn, we add it to our list.
+Decision: The Iterative approach is significantly better for this specific problem. It is concise (), less prone to stack overflow or recursion bugs, and easiest to implement in an interview. 
+The backtracking solution you provided is clever but arguably over-engineered for a problem with such a small search space.
+Below is the refined Markdown content you can copy and submit.
+
+🚀 Tips and Tricks for Binary Watch
+Bit Counting: In Java, Integer.bitCount(int i) is a highly optimized intrinsic method that returns the number of one-bits. Knowing this standard library method saves you from writing a helper function to count bits.
+String Formatting: While String.format("%d:%02d", h, m) is readable, it is relatively slow in Java. Using StringBuilder (as shown in the solution above) is faster and often preferred in competitive programming contexts.
+Bounds Check:
+Max Hour: 11 (1011 binary) 3 bits on.
+Max Minute: 59 (111011 binary) 5 bits on.
+Therefore, the maximum possible turnedOn value that returns a valid time is . If the input is 9 or 10, you can immediately return an empty list.
+
+Code:-
+class Solution {
+    public List<String> readBinaryWatch(int turnedOn) {
+        List<String> times = new ArrayList<>();
+
+
+        for(int h = 0;h < 12;h++){
+            
+            for(int m = 0; m < 60;m++){
+                if(Integer.bitCount(h) + Integer.bitCount(m) == turnedOn)
+                    // times.add(String.format("%d:%02d", h, m));
+                    times.add(h + ":" + (m < 10 ? "0" + m : m));
+            }
+        }
+        return times;
+    }
+}
