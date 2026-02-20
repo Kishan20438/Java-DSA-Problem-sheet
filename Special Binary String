@@ -1,0 +1,244 @@
+
+761 Problem:-
+Special binary strings are binary strings with the following two properties:
+The number of 0's is equal to the number of 1's.
+Every prefix of the binary string has at least as many 1's as 0's.
+You are given a special binary string s.
+A move consists of choosing two consecutive, non-empty, special substrings of s, and swapping them. Two strings are consecutive 
+if the last character of the first string is exactly one index before the first character of the second string.
+Return the lexicographically largest resulting string possible after applying the mentioned operations on the string.
+
+Example 1:
+Input: s = "11011000"
+Output: "11100100"
+Explanation: The strings "10" [occuring at s[1]] and "1100" [at s[3]] are swapped.
+This is the lexicographically largest string possible after some number of swaps.
+
+Example 2:
+Input: s = "10"
+Output: "10"
+ 
+Constraints:-
+1 <= s.length <= 50
+s[i] is either '0' or '1'.
+s is a special binary string.
+
+==============================================================================================================================================================
+
+Solution:-
+Intuition:-
+A special binary string has equal 1s and 0s with the property that any prefix has more or equal 1s than 0s. The key insight: we can recursively 
+find "special" substrings (balanced chunks), make each chunk largest recursively, then sort these chunks in descending order to get the overall largest arrangement.
+
+Approach:-
+The Strategy:
+Step 1: Find balanced special substrings
+Use a counter: increment for '1', decrement for '0'
+When counter hits 0, we've found a complete balanced chunk
+This chunk can be treated independently
+
+Step 2: Recursively process each chunk
+Extract the inner content (remove outer '1' and '0')
+Recursively make the inner part largest
+Wrap result back with '1' and '0'
+
+Step 3: Sort chunks in descending order
+Larger lexicographic chunks should come first
+Join all sorted chunks to form the result
+
+Step 4: Base case
+Empty or single-level strings return as-is
+
+Complexity:-
+Time complexity: O(n 2 logn)
+Finding chunks: O(n) per level
+Sorting chunks: O(k log k) where k ≤ n
+Recursion depth: O(n) in worst case
+String operations (substring, join): O(n)
+Overall: O(n² log n) worst case
+
+Space complexity: O(n 2 )
+Recursion stack depth: O(n)
+Storing substrings at each level: O(n)
+Total across all recursive calls: O(n²)
+
+Code:-
+class Solution {
+    public String makeLargestSpecial(String s) {
+        int count = 0, i = 0;
+        List<String> res = new ArrayList<>();
+        
+        for (int j = 0; j < s.length(); j++) {
+            // Track balance: +1 for '1', -1 for '0'
+            if (s.charAt(j) == '1') count++;
+            else count--;
+            
+            // Found a balanced chunk when count returns to 0
+            if (count == 0) {
+                // Recursively maximize inner part, wrap with 1...0
+                res.add('1' + makeLargestSpecial(s.substring(i + 1, j)) + '0');
+                i = j + 1; // Move to next potential chunk
+            }
+        }
+        
+        // Sort chunks in descending order for largest arrangement
+        Collections.sort(res, Collections.reverseOrder());
+        return String.join("", res);
+    }
+}
+
+
+-----------------------------------------------------------------------------------------------------
+
+Visual Representation:
+Input: s = "11011000"
+
+Find balanced chunks (count = 0 points):
+  1 1 0 1 1 0 0 0
+  ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+  1 2 1 2 3 2 1 0 ← count values
+              ↑
+            count=0 → found chunk "11011000"
+
+Since it's one chunk, extract inner: "1011000"
+
+Recursively process "1011000":
+  1 0 1 1 0 0 0
+  ↓ ↓ ↓ ↓ ↓ ↓ ↓
+  1 0 1 2 1 0 ← count values
+    ↑       ↑
+  Chunks: "10" and "11000"
+
+Process "10": inner="" → ""
+  Result: "1" + "" + "0" = "10"
+
+Process "11000": inner="100"
+  Recursively on "100":
+    1 0 0
+    ↓ ↓ ↓
+    1 0 ← found "100"
+    Inner: "0" → base case → "0"
+    Result: "1" + "0" + "0" = "100"
+  Result: "1" + "100" + "0" = "11000"
+
+Chunks: ["10", "11000"]
+Sort descending: ["11000", "10"]
+Join: "1100010"
+
+Final wrap: "1" + "1100010" + "0" = "111000100"
+Example Walkthrough:
+Input: s = "11011000"
+
+Initial call: makeLargestSpecial("11011000")
+
+j=0, s[0]='1': count=1
+j=1, s[1]='1': count=2
+j=2, s[2]='0': count=1
+j=3, s[3]='1': count=2
+j=4, s[4]='1': count=3
+j=5, s[5]='0': count=2
+j=6, s[6]='0': count=1
+j=7, s[7]='0': count=0 → chunk found!
+  
+  res.add('1' + makeLargestSpecial("1011000") + '0')
+  
+  Recursive call: makeLargestSpecial("1011000")
+  
+  j=0: count=1
+  j=1: count=0 → chunk "10"
+    res.add('1' + makeLargestSpecial("") + '0')
+    makeLargestSpecial("") returns ""
+    res = ["10"]
+    i = 2
+  
+  j=2: count=1
+  j=3: count=2
+  j=4: count=1
+  j=5: count=0 → chunk "11000"
+    res.add('1' + makeLargestSpecial("100") + '0')
+    
+    Recursive call: makeLargestSpecial("100")
+    j=0: count=1
+    j=1: count=0 → chunk "10"
+      res.add('1' + makeLargestSpecial("0") + '0')
+      makeLargestSpecial("0") returns ""
+      res = ["10"]
+    Sort: ["10"]
+    Return: "10"
+    
+    Back to "11000": '1' + "10" + '0' = "1100"
+    Wait, that's wrong. Let me recalculate...
+
+Actually "100":
+  j=0: count=1
+  j=1: count=0 → found chunk at j=1
+    substring(1,1) = "" (empty)
+    res.add('1' + "" + '0') = "10"
+    i = 2
+  j=2: count=-1? No, we start fresh at i=2
+  
+  Actually the loop continues from i=0:
+  After first chunk, i=2, but j continues from 2
+  j=2: s[2]='0', count=-1
+  
+  Wait, I need to reconsider the algorithm...
+How the Algorithm Actually Works:
+The key: count tracks balance of 1s and 0s
+
+When count reaches 0:
+  - We've closed a balanced chunk
+  - Everything from i to j is a "special substring"
+  - We recursively solve the INNER part (i+1 to j-1)
+  - Wrap with '1' at start and '0' at end
+
+Example: "11011000"
+
+Scanning:
+  11011000
+  ↑      ↑
+  i=0   j=7, count=0 → whole string is one chunk
+
+  Inner part: substring(1, 7) = "101100"
+  
+  Process "101100":
+    10: count=0 at j=1
+      Inner: "" → ""
+      Add: "10"
+    1100: count=0 at j=5
+      Inner: "10" 
+        Process "10": chunk at j=1
+          Inner: ""
+          Add: "10"
+        Return: "10"
+      Add: "1" + "10" + "0" = "1100"
+    
+    res = ["10", "1100"]
+    Sort descending: ["1100", "10"]
+    Return: "110010"
+  
+  Wrap: "1" + "110010" + "0" = "11100100"
+Why Sorting Works:
+After recursively maximizing each chunk,
+sorting them in descending order gives
+the lexicographically largest result.
+
+Example chunks: ["10", "1100", "110010"]
+
+Sorted desc: ["110010", "1100", "10"]
+
+This is largest because:
+  "110010..." > "1100..." > "10..."
+  
+Lexicographic comparison naturally
+puts larger strings first.
+Recursive Structure:
+makeLargestSpecial(s):
+  1. Find all top-level balanced chunks
+  2. For each chunk:
+     - Extract inner part (remove outer 1 and 0)
+     - Recursively maximize inner part
+     - Wrap with 1...0
+  3. Sort all chunks descending
+  4. Join and return
+
+Base case: empty string or no chunks → return as-is
