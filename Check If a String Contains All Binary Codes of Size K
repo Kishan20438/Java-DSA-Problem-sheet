@@ -1,0 +1,65 @@
+
+1461 Problem:-
+Given a binary string s and an integer k, return true if every binary code of length k is a substring of s. Otherwise, return false.
+
+Example 1:
+Input: s = "00110110", k = 2
+Output: true
+Explanation: The binary codes of length 2 are "00", "01", "10" and "11". They can be all found as substrings at indices 0, 1, 3 and 2 respectively.
+
+Example 2:
+Input: s = "0110", k = 1
+Output: true
+Explanation: The binary codes of length 1 are "0" and "1", it is clear that both exist as a substring. 
+
+Example 3:
+Input: s = "0110", k = 2
+Output: false
+Explanation: The binary code "00" is of length 2 and does not exist in the array.
+ 
+Constraints:-
+1 <= s.length <= 5 * 105
+s[i] is either '0' or '1'.
+1 <= k <= 20
+
+================================================================================================================================================================
+
+Solution:-
+Intuition:-
+A binary string of length k can form exactly 2^k different possible codes.
+Instead of generating all possible binary strings and checking if each exists in s, we reverse the thinking.
+If we slide a window of size k over s and collect all distinct substrings of length k,
+and if the number of distinct substrings equals 2^k,
+then s must contain every possible binary code of size k.
+So the problem reduces to counting how many unique substrings of length k exist in s.
+If that count equals 2^k, return true, otherwise return false.
+
+Approach :-
+Initialize a set to store unique substrings.
+Traverse the string s using a sliding window of size k.
+For every index i:
+Extract substring of length k
+Insert it into the set.
+After traversal:
+Check if the set size equals 2^k.
+If equal → return true
+Otherwise → return false.
+
+⏱ Complexity:-
+Time Complexity: O(n * k)
+Space Complexity: O(2^k * k)
+
+Code:-
+import java.util.*;
+
+class Solution {
+    public boolean hasAllCodes(String s, int k) {
+        HashSet<String> st = new HashSet<>();
+
+        for (int i = 0; i + k <= s.length(); i++) {
+            st.add(s.substring(i, i + k));
+        }
+
+        return st.size() == (int)Math.pow(2, k);
+    }
+}
