@@ -1,0 +1,122 @@
+
+3666 Problem:-
+You are given a binary string s, and an integer k.
+In one operation, you must choose exactly k different indices and flip each '0' to '1' and each '1' to '0'.
+Return the minimum number of operations required to make all characters in the string equal to '1'. If it is not possible, return -1.
+
+Example 1:
+Input: s = "110", k = 1
+Output: 1
+Explanation:
+There is one '0' in s.
+Since k = 1, we can flip it directly in one operation.
+
+Example 2:
+Input: s = "0101", k = 3
+Output: 2
+Explanation:
+One optimal set of operations choosing k = 3 indices in each operation is:
+Operation 1: Flip indices [0, 1, 3]. s changes from "0101" to "1000".
+Operation 2: Flip indices [1, 2, 3]. s changes from "1000" to "1111".
+Thus, the minimum number of operations is 2.
+
+Example 3:
+Input: s = "101", k = 2
+Output: -1
+Explanation:
+Since k = 2 and s has only one '0', it is impossible to flip exactly k indices to make all '1'. Hence, the answer is -1.
+
+Constraints:
+1 <= s.length <= 10​​​​​​​5
+s[i] is either '0' or '1'.
+1 <= k <= s.length
+
+=================================================================================================================================================================
+
+Solution:-
+Intuition
+The task is to flip exactly k indices in each operation to convert all characters to 1.
+First, we have to understand parity constraints and overlap between operations:
+A position flipped an even number of times returns to its original state. A position flipped an odd number of times changes state.
+If we perform m operations, flipping k indices each time, the total number of flips is m×k. Due to potential overlaps, the actual number of distinct positions changed depends on the parity of both k and m.
+When len=k, operations can overlap. The maximum non-overlapping region is base=len−k.
+
+Analysis:
+The solution considers two cases:
+using an odd number of operations or an even number of operations.
+For each case, we calculate the minimum operations needed and check if the parity constraints are satisfied.
+
+Algorithm:
+First, calculate the number of '0' characters that need to be flipped to '1'
+Base cases:
+If no zeros exist, return 0
+If len=k, special handling applies (we flip the entire string each time)
+
+Calculate overlap parameter: base=len−k
+This represents the maximum region that does not overlap between consecutive operations.
+
+Calculate minimum odd operations:
+Find the smallest odd number of operations that can flip enough positions:
+odd=max(⌈ k zero ⌉,⌈ base len−zero ⌉)
+​
+Adjust to ensure it is odd.
+Calculate minimum even operations:
+Find the smallest even number of operations:
+even=max(⌈ k zero​ ⌉,⌈ base zero​ ⌉)​
+ 
+Adjust to ensure it is even.
+Check parity validity:
+For odd operations: Valid if (kmod2)=(zeromod2)
+For even operations: Valid if zero is even
+Return result: Minimum valid operations, or −1 if none exist
+
+EXAMPLE
+s=0101110001
+k=3
+
+Complexity Analysis
+Time Complexity: O(n)
+Space Complexity: O(1)
+
+Code:-
+class Solution {
+    public int minOperations(String s, int k) {
+        int zero = 0;
+        int len = s.length();
+
+        for (int i = 0; i < len; i++)
+            zero += ~s.charAt(i) & 1;
+
+        if (zero == 0)
+            return 0;
+
+        if (len == k)
+            return ((zero == len ? 1 : 0) << 1) - 1;
+
+        int base = len - k;
+
+        int odd = Math.max(
+            (zero + k - 1) / k,
+            (len - zero + base - 1) / base
+        );
+
+        odd += ~odd & 1;
+
+        int even = Math.max(
+            (zero + k - 1) / k,
+            (zero + base - 1) / base
+        );
+
+        even += even & 1;
+
+        int res = Integer.MAX_VALUE;
+
+        if ((k & 1) == (zero & 1))
+            res = Math.min(res, odd);
+
+        if ((~zero & 1) == 1)
+            res = Math.min(res, even);
+
+        return res == Integer.MAX_VALUE ? -1 : res;
+    }
+}
