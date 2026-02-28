@@ -1,0 +1,59 @@
+
+1680 Problem:-
+Given an integer n, return the decimal value of the binary string formed by concatenating the binary representations of 1 to n in order, modulo 109 + 7.
+
+Example 1:
+Input: n = 1
+Output: 1
+Explanation: "1" in binary corresponds to the decimal value 1. 
+
+Example 2:
+Input: n = 3
+Output: 27
+Explanation: In binary, 1, 2, and 3 corresponds to "1", "10", and "11".
+After concatenating them, we have "11011", which corresponds to the decimal value 27.
+
+Example 3:
+Input: n = 12
+Output: 505379714
+Explanation: The concatenation results in "1101110010111011110001001101010111100".
+The decimal value of that is 118505380540.
+After modulo 109 + 7, the result is 505379714.
+ 
+Constraints:-
+1 <= n <= 105
+
+Code:-
+Intuition:-
+Instead of actually building the binary string (which would be too large), we simulate concatenation using bit manipulation. 
+When appending a number i to the current result, we left shift the result by the number of bits in i and then add i.
+
+Approach:-
+Maintain a variable bits representing the number of bits in the current number i.
+The number of bits increases only when i is a power of 2.
+Detect power of 2 using (i & (i-1)) == 0.
+For each i from 1 to n:
+If i is a power of 2, increment bits.
+Left shift the result by bits and OR with i.
+Take modulo to avoid overflow.
+Small explanation for (i & (i-1)) == 0:
+A power of 2 has only one set bit in binary. Subtracting 1 flips that bit and all bits to its right. Performing AND between i and i-1 results in 0 only for powers of 2.
+
+Complexity:-
+Time complexity: O(n)
+Space complexity: O(1)
+
+Code:-
+class Solution {
+    public int concatenatedBinary(int n) {
+        final int MOD = 1_000_000_007;
+        long res = 0;
+        int bits = 0;
+
+        for(int i=1; i<=n; i++){
+            if((i & (i-1)) == 0) bits++;
+            res = ((res<<bits) | i) % MOD;
+        }
+        return (int)res;
+    }
+}
