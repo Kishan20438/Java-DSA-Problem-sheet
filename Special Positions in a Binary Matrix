@@ -1,0 +1,76 @@
+
+1582 Problem:-
+Given an m x n binary matrix mat, return the number of special positions in mat.
+A position (i, j) is called special if mat[i][j] == 1 and all other elements in row i and column j are 0 (rows and columns are 0-indexed).
+
+Example 1:
+Input: mat = [[1,0,0],[0,0,1],[1,0,0]]
+Output: 1
+Explanation: (1, 2) is a special position because mat[1][2] == 1 and all other elements in row 1 and column 2 are 0.
+
+Example 2:
+Input: mat = [[1,0,0],[0,1,0],[0,0,1]]
+Output: 3
+Explanation: (0, 0), (1, 1) and (2, 2) are special positions.
+ 
+Constraints:
+m == mat.length
+n == mat[i].length
+1 <= m, n <= 100
+mat[i][j] is either 0 or 1.
+
+================================================================================================================================================================
+
+Solution:-
+Intuition:-
+A position (i, j) is special if:
+mat[i][j] == 1
+It is the only 1 in its row
+It is the only 1 in its column
+Instead of checking the entire row and column every time (which would be inefficient), we can precompute how many 1s each row and column contains.
+If a cell is 1 and both its row count and column count equal 1, then it must be special.
+
+Approach:-
+Create two arrays:
+row[i] → count of 1s in row i
+col[j] → count of 1s in column j
+First pass:
+Traverse matrix
+Count 1s for every row and column
+Second pass:
+If mat[i][j] == 1
+AND row[i] == 1
+AND col[j] == 1
+Increase answer
+
+Complexity:-
+Time complexity:O(m × n)
+Space complexity:O(m + n)
+
+Code:-
+class Solution {
+    public int numSpecial(int[][] mat) {
+        int m = mat.length, n = mat[0].length;
+        int[] row = new int[m];
+        int[] col = new int[n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (mat[i][j] == 1) {
+                    row[i]++;
+                    col[j]++;
+                }
+            }
+        }
+
+        int ans = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (mat[i][j] == 1 && row[i] == 1 && col[j] == 1) {
+                    ans++;
+                }
+            }
+        }
+
+        return ans;
+    }
+}
