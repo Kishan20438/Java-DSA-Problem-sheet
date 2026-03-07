@@ -1,0 +1,93 @@
+
+1888 Problem:-
+You are given a binary string s. You are allowed to perform two types of operations on the string in any sequence:
+Type-1: Remove the character at the start of the string s and append it to the end of the string.
+Type-2: Pick any character in s and flip its value, i.e., if its value is '0' it becomes '1' and vice-versa.
+Return the minimum number of type-2 operations you need to perform such that s becomes alternating.
+The string is called alternating if no two adjacent characters are equal.
+For example, the strings "010" and "1010" are alternating, while the string "0100" is not.
+
+Example 1:
+Input: s = "111000"
+Output: 2
+Explanation: Use the first operation two times to make s = "100011".
+Then, use the second operation on the third and sixth elements to make s = "101010".
+
+Example 2:
+Input: s = "010"
+Output: 0
+Explanation: The string is already alternating
+
+Example 3:
+Input: s = "1110"
+Output: 1
+Explanation: Use the second operation on the second element to make s = "1010".
+ 
+Constraints:-
+1 <= s.length <= 105
+s[i] is either '0' or '1'.
+
+==================================================================================================================================================================
+
+Solution:-
+Intuition:-
+For the current problem, there is a new operation: the cyclic shift.
+We perform a cyclic shift on the string s, then find the minimum operations required for each cycle.
+This can be simulated this using a sliding window over a concatenated string S=s+s.
+
+Brute Force:-
+We can use minOperations as a helper function, to check each fixed length substrings:
+
+int minFlips(string s) {
+    int n = s.length();
+    string S = s + s;
+    int res = n;
+    for (int i = 0; i < n; i++)
+        res = min(res, minOperations(S.substr(i, n)));
+    return res;
+}
+
+int minOperations(string s) {
+    int op[2] = {0, 0};
+    for (int i = 0; i < s.length(); i++)
+        op[(s[i] ^ i) & 1]++;
+    return min(op[0], op[1]);
+}
+However, this is an O(n 2 ) solution .
+
+Our goal is to optimize the solution using a single pass to satisfy the 10 5.
+
+constraints:-
+Optimized Sliding Window
+To achieve O(n) complexity, we maintain the mismatch states incrementally.
+In the first loop, we compute the total mismatch count for both pattern:
+
+op[0] − pattern 0101...
+op[1] − pattern 1010...
+
+again, this is basically the previous problem.
+Then, as the window slides one position to the right, only two elements change:
+The character exiting the left boundary and the character entering the right boundary.
+We can simulate the cyclic shift without physical string concatenation by utilizing a virtual index:
+Remove the mismatch contribution of the exiting character s[i] at its original index i.
+While appending the same character to the right boundary at the virtual index n+i.
+
+Code:-
+class Solution {
+    public int minFlips(String s) {
+        int n = s.length();
+        int res = n;
+        int[] op = {0, 0};
+
+        for (int i = 0; i < n; i++)
+            op[(s.charAt(i) ^ i) & 1]++;
+
+        for (int i = 0; i < n; i++) {
+            op[(s.charAt(i) ^ i) & 1]--;
+            op[(s.charAt(i) ^ (n + i)) & 1]++;
+            res = Math.min(res, Math.min(op[0], op[1]));
+        }
+
+        return res;
+    }
+}
