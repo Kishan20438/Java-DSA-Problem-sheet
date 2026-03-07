@@ -1,4 +1,4 @@
-
+ 
 1888 Problem:-
 You are given a binary string s. You are allowed to perform two types of operations on the string in any sequence:
 Type-1: Remove the character at the start of the string s and append it to the end of the string.
