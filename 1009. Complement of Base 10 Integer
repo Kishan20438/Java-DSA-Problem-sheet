@@ -1,4 +1,4 @@
-
+ 
 1009 Problem:-
 Intution: Since we have to find the complement of a given decimal number in binary form, we will use the complement property which is N + Compliment(N) = 111....111.
 The complement of an integer is the integer you get when you flip all the 0's to 1's and all the 1's to 0's in its binary representation.
