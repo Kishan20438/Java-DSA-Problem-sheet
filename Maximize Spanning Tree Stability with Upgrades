@@ -1,0 +1,191 @@
+
+3600 Problem:-
+You are given an integer n, representing n nodes numbered from 0 to n - 1 and a list of edges, where edges[i] = [ui, vi, si, musti]:
+ui and vi indicates an undirected edge between nodes ui and vi.
+si is the strength of the edge.
+musti is an integer (0 or 1). If musti == 1, the edge must be included in the spanning tree. These edges cannot be upgraded.
+You are also given an integer k, the maximum number of upgrades you can perform. Each upgrade doubles the strength of an edge, and each eligible edge (with musti == 0) can be upgraded at most once.
+The stability of a spanning tree is defined as the minimum strength score among all edges included in it.
+Return the maximum possible stability of any valid spanning tree. If it is impossible to connect all nodes, return -1.
+Note: A spanning tree of a graph with n nodes is a subset of the edges that connects all nodes together (i.e. the graph is connected) without forming any cycles, and uses exactly n - 1 edges.
+
+Example 1:
+Input: n = 3, edges = [[0,1,2,1],[1,2,3,0]], k = 1
+Output: 2
+Explanation:
+Edge [0,1] with strength = 2 must be included in the spanning tree.
+Edge [1,2] is optional and can be upgraded from 3 to 6 using one upgrade.
+The resulting spanning tree includes these two edges with strengths 2 and 6.
+The minimum strength in the spanning tree is 2, which is the maximum possible stability.
+
+Example 2:
+Input: n = 3, edges = [[0,1,4,0],[1,2,3,0],[0,2,1,0]], k = 2
+Output: 6
+Explanation:
+Since all edges are optional and up to k = 2 upgrades are allowed.
+Upgrade edges [0,1] from 4 to 8 and [1,2] from 3 to 6.
+The resulting spanning tree includes these two edges with strengths 8 and 6.
+The minimum strength in the tree is 6, which is the maximum possible stability.
+
+Example 3:
+Input: n = 3, edges = [[0,1,1,1],[1,2,1,1],[2,0,1,1]], k = 0
+Output: -1
+Explanation:-
+All edges are mandatory and form a cycle, which violates the spanning tree property of acyclicity. Thus, the answer is -1.
+
+Constraints:-
+2 <= n <= 105
+1 <= edges.length <= 105
+edges[i] = [ui, vi, si, musti]
+0 <= ui, vi < n
+ui != vi
+1 <= si <= 105
+musti is either 0 or 1.
+0 <= k <= n
+There are no duplicate edges.
+
+==========================================================================================================================================================================
+
+Solution:-
+Intuition:-
+To maximize the stability of the network, we want to maximize the minimum edge weight in the final spanning tree.
+The edges are of two types:
+Must edges → These must always be included in the final graph.
+Flexible edges → These can be used to connect remaining components and can be upgraded up to k times.
+First, we add all must edges to the graph using Union-Find (DSU).
+If adding a must edge creates a cycle, then forming a valid tree is impossible.
+While adding must edges, we track the minimum weight among them, since this directly affects the final stability.
+
+After that, we process flexible edges to connect the remaining components.
+We sort them by weight (descending) so that we greedily build a structure similar to a Maximum Spanning Tree.
+Whenever a flexible edge connects two different components, we add it and store its weight in a min-heap.
+Since the stability of the tree depends on the smallest edge, we always try to upgrade the smallest flexible edge first.
+Each upgrade doubles the weight of that edge.
+Finally, the answer becomes the minimum value among:
+The minimum must-edge weight
+The smallest flexible edge after upgrades
+If the graph is not fully connected at the end, the answer is -1.
+
+Approach:-
+Initialize Disjoint Set Union (Union-Find) with n nodes.
+Separate edges into:
+must edges
+flex edges
+Add all must edges using DSU:
+Track the minimum weight among them.
+If a cycle occurs → return -1.
+Sort flexible edges in descending order of weight.
+Iterate through flexible edges:
+If they connect two different components, union them.
+Push their weights into a min-heap.
+Use up to k upgrades:
+Always upgrade the smallest flexible edge in the heap.
+If the graph is not fully connected → return -1.
+Return the minimum value among:
+mini (minimum must edge)
+smallest upgraded flexible edge.
+
+Complexity:-
+Time Complexity:-
+Sorting flexible edges: O(E log E)
+Union-Find operations: O(E α(N))
+Heap operations: O(k log E)
+Overall complexity:
+O(ElogE)
+
+Space Complexity:-
+DSU arrays: O(N)
+Heap storage: O(E)
+Overall:
+O(N+E)
+
+Code:-
+class Solution {
+
+    int components;
+    int[] parent;
+    int[] size;
+
+    int findParent(int node){
+        if(parent[node] == node) return node;
+        return parent[node] = findParent(parent[node]);
+    }
+
+    boolean union(int u, int v){
+        int pu = findParent(u);
+        int pv = findParent(v);
+
+        if(pu == pv) return false;
+
+        components--;
+
+        if(size[pu] > size[pv]){
+            parent[pv] = pu;
+            size[pu] += size[pv];
+        }else{
+            parent[pu] = pv;
+            size[pv] += size[pu];
+        }
+
+        return true;
+    }
+
+    public int maxStability(int n, int[][] edges, int k) {
+
+        components = n;
+        parent = new int[n];
+        size = new int[n];
+
+        for(int i = 0; i < n; i++){
+            parent[i] = i;
+            size[i] = 1;
+        }
+
+        List<int[]> must = new ArrayList<>();
+        List<int[]> flex = new ArrayList<>();
+
+        for(int[] e : edges){
+            if(e[3] == 1) must.add(e);
+            else flex.add(e);
+        }
+
+        int mini = Integer.MAX_VALUE;
+
+        for(int[] e : must){
+            int u = e[0];
+            int v = e[1];
+            int w = e[2];
+
+            mini = Math.min(mini, w);
+
+            if(!union(u,v)) return -1;
+        }
+
+        flex.sort((a,b) -> b[2] - a[2]);
+
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+
+        for(int[] e : flex){
+            int u = e[0];
+            int v = e[1];
+            int w = e[2];
+
+            if(union(u,v)){
+                pq.add(w);
+            }
+        }
+
+        while(k-- > 0 && !pq.isEmpty()){
+            int x = pq.poll();
+            mini = Math.min(mini, 2 * x);
+        }
+
+        if(components != 1) return -1;
+
+        if(!pq.isEmpty()){
+            return Math.min(mini, pq.peek());
+        }
+
+        return mini;
+    }
+}
