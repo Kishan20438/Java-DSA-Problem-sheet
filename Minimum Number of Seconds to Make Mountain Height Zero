@@ -1,0 +1,144 @@
+
+3296 Problem:-
+You are given an integer mountainHeight denoting the height of a mountain.
+You are also given an integer array workerTimes representing the work time of workers in seconds.
+The workers work simultaneously to reduce the height of the mountain. For worker i:
+To decrease the mountain's height by x, it takes workerTimes[i] + workerTimes[i] * 2 + ... + workerTimes[i] * x seconds. For example:
+To reduce the height of the mountain by 1, it takes workerTimes[i] seconds.
+To reduce the height of the mountain by 2, it takes workerTimes[i] + workerTimes[i] * 2 seconds, and so on.
+Return an integer representing the minimum number of seconds required for the workers to make the height of the mountain 0.
+
+Example 1:
+Input: mountainHeight = 4, workerTimes = [2,1,1]
+Output: 3
+Explanation:
+One way the height of the mountain can be reduced to 0 is:
+Worker 0 reduces the height by 1, taking workerTimes[0] = 2 seconds.
+Worker 1 reduces the height by 2, taking workerTimes[1] + workerTimes[1] * 2 = 3 seconds.
+Worker 2 reduces the height by 1, taking workerTimes[2] = 1 second.
+Since they work simultaneously, the minimum time needed is max(2, 3, 1) = 3 seconds.
+
+Example 2:
+Input: mountainHeight = 10, workerTimes = [3,2,2,4]
+Output: 12
+Explanation:
+Worker 0 reduces the height by 2, taking workerTimes[0] + workerTimes[0] * 2 = 9 seconds.
+Worker 1 reduces the height by 3, taking workerTimes[1] + workerTimes[1] * 2 + workerTimes[1] * 3 = 12 seconds.
+Worker 2 reduces the height by 3, taking workerTimes[2] + workerTimes[2] * 2 + workerTimes[2] * 3 = 12 seconds.
+Worker 3 reduces the height by 2, taking workerTimes[3] + workerTimes[3] * 2 = 12 seconds.
+The number of seconds needed is max(9, 12, 12, 12) = 12 seconds.
+
+Example 3:
+Input: mountainHeight = 5, workerTimes = [1]
+Output: 15
+Explanation:
+There is only one worker in this example, so the answer is workerTimes[0] + workerTimes[0] * 2 + workerTimes[0] * 3 + workerTimes[0] * 4 + workerTimes[0] * 5 = 15.
+
+Constraints:
+1 <= mountainHeight <= 105
+1 <= workerTimes.length <= 104
+1 <= workerTimes[i] <= 106
+
+===================================================================================================================================================================
+
+The Core Idea: The "Guessing Game"
+Instead of trying to calculate the exact finishing time perfectly from the start, we are going to play a game of "Higher or Lower" with the total time.
+Ask yourself this question: "If I give the workers exactly 1000 seconds, can they completely destroy the mountain?"
+If the answer is YES: Awesome! But... could they have done it in 900 seconds? We lower our guess.
+If the answer is NO: 1000 seconds wasn't enough. We need to raise our guess.
+Because time moves strictly forward (if 100 seconds isn't enough, 99 seconds definitely won't be), we can use Binary Search to make our guesses extremely fast.
+
+Step 1: The Math (How a Worker Works)
+Every time a worker chops off a chunk of the mountain, they get more tired.
+If a worker's base speed is t:
+Chunk 1 takes: 1 * t seconds
+Chunk 2 takes: 2 * t seconds
+Chunk 3 takes: 3 * t seconds
+If they chop k chunks, their total time is the sum of all those steps. Using a classic math shortcut (the sum of the first N natural numbers), the formula for their total time is:
+Time=t× 2k(k+1)
+​
+Step 2: The Outer Guess (Searching for Time)
+We need a starting range for our time guesses.
+Lowest possible time: 0 seconds.
+Highest possible time: An absurdly large number just to be safe (like 1e16 seconds), assuming the slowest worker does the whole job alone.
+We pick the middle of this range. Let's call this guessed time midTime. Now, we need to check if midTime is enough for our workers.
+
+Step 3: The Inner Guess (Searching for Height)
+For our guessed midTime, we look at each worker and ask: "How many chunks of the mountain can you chop down in this much time?"
+Instead of using scary quadratic equations to reverse-engineer the math formula above, we just play another quick game of Higher or Lower (a second Binary Search!) for each worker.
+We guess a chunk amount (e.g., "Can you chop 50 chunks?").
+We plug 50 into our math formula: t× 2 50(51) .
+If the resulting time is ≤ midTime, they can do it! We guess a higher amount of chunks to see their true limit.
+If it takes too long, we guess a lower amount of chunks.
+
+Step 4: Adding It All Up
+We do Step 3 for every single worker.
+Worker A can chop 10 chunks.
+Worker B can chop 15 chunks.
+Worker C can chop 5 chunks.
+Total chunks chopped: 30.
+If 30 is greater than or equal to the total mountainHeight, then our guessed midTime was a success! We record this time, and then try to see if a smaller midTime also works.
+If 30 is less than the mountainHeight, our workers failed. We need to guess a larger midTime.
+(Optimization trick: If Worker A and B already chopped enough to clear the mountain, we don't even need to calculate Worker C. We can just stop early!)
+
+Complexity (Why is this fast?)
+Even though a "search within a search" sounds slow, Binary Search cuts the problem in half every single step.
+Time Complexity: * Guessing the Time (Outer loop): Halving 1e16 takes at most ~54 steps.
+Guessing the Height (Inner loop): Halving the mountainHeight (let's say 100,000) takes at most ~17 steps.
+So, for each worker, we do about 17 steps. We do this 54 times.
+In Big-O notation, this is: O(N * log(mountainHeight) * log(maxTime)), where N is the number of workers. This runs incredibly fast.
+Space Complexity: O(1). We are just storing a few integer variables for our guesses, not creating any massive new arrays.
+
+Code:-
+
+import java.util.Arrays;
+
+class Solution {
+    public long minNumberOfSeconds(int mountainHeight, int[] workerTimes) {
+        Arrays.sort(workerTimes);
+        
+        long lowTime = 0;
+        long highTime = (long) 1e16; 
+        long minRequiredTime = highTime;
+        
+        while (lowTime <= highTime) {
+            long midTime = lowTime + (highTime - lowTime) / 2;
+            long totalHeightReduced = 0;
+            
+            for (int baseTime : workerTimes) {
+
+                long lowHeight = 0;
+                long highHeight = mountainHeight;
+                long maxWorkerHeight = 0;
+                
+                while (lowHeight <= highHeight) {
+                    long midHeight = lowHeight + (highHeight - lowHeight) / 2;
+                    
+                    long timeNeeded = (long) baseTime * midHeight * (midHeight + 1) / 2;
+                    
+                    if (timeNeeded <= midTime) {
+                        maxWorkerHeight = midHeight;
+                        lowHeight = midHeight + 1;
+                    } else {
+                        highHeight = midHeight - 1;
+                    }
+                }
+                
+                totalHeightReduced += maxWorkerHeight;
+                
+                if (totalHeightReduced >= mountainHeight) {
+                    break;
+                }
+            }
+            
+            if (totalHeightReduced >= mountainHeight) {
+                minRequiredTime = midTime;
+                highTime = midTime - 1;
+            } else {
+                lowTime = midTime + 1;
+            }
+        }
+        
+        return minRequiredTime;
+    }
+}
