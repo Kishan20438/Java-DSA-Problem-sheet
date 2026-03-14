@@ -1,0 +1,116 @@
+
+1415 Problem:-
+A happy string is a string that:
+consists only of letters of the set ['a', 'b', 'c'].
+s[i] != s[i + 1] for all values of i from 1 to s.length - 1 (string is 1-indexed).
+For example, strings "abc", "ac", "b" and "abcbabcbcb" are all happy strings and strings "aa", "baa" and "ababbc" are not happy strings.
+Given two integers n and k, consider a list of all happy strings of length n sorted in lexicographical order.
+Return the kth string of this list or return an empty string if there are less than k happy strings of length n.
+
+Example 1:
+Input: n = 1, k = 3
+Output: "c"
+Explanation: The list ["a", "b", "c"] contains all happy strings of length 1. The third string is "c".
+
+Example 2:
+Input: n = 1, k = 4
+Output: ""
+Explanation: There are only 3 happy strings of length 1.
+
+Example 3:
+Input: n = 3, k = 9
+Output: "cab"
+Explanation: There are 12 different happy string of length 3 ["aba", "abc", "aca", "acb", "bab", "bac", "bca", "bcb", "cab", "cac", "cba", "cbc"]. You will find the 9th string = "cab"
+ 
+Constraints:
+1 <= n <= 10
+1 <= k <= 100
+ 
+=====================================================================================================================================================================
+
+Solution:-
+Intuition
+Hi, let's look at the screenshot below that I focused on writing first. :P
+From the observation, the total number of happy strings of length n is: 3 * 2^(n-1)
+So we first check whether k exceeds this value. If it does, the k-th happy string cannot exist and we directly return an empty string.
+If a valid k exists, the idea is to generate happy strings in lexicographical order. While constructing the string, we ensure that no two adjacent characters are the same.
+We build the string character by character and whenever the length becomes n, we have formed one valid happy string. We keep counting such strings, and as soon as the k-th string is generated, we return it.
+
+Approach
+First compute the total number of possible happy strings using
+size = 3 × 2^(n−1).
+If k > size, the k-th happy string cannot exist, so return an empty string.
+Use recursion with backtracking to generate happy strings.
+
+Maintain:
+a string / StringBuilder to build the current string
+a counter (count) to track how many valid happy strings have been generated.
+At each recursive step:
+Try adding characters 'a', 'b', 'c'.
+Before adding a character, check that it is not equal to the last character of the current string to maintain the happy string condition.
+After adding a character:
+Recursively build the rest of the string.
+If the string length becomes n, increment count.
+When count == k, return the current string as the answer.
+After exploring a choice, remove the last character (backtrack) so other possibilities can be explored.
+Since characters are tried in the order a → b → c, the strings are generated in lexicographical order, ensuring the k-th valid string encountered is the required answer.
+
+Complexity
+Time complexity:
+In the worst case, we may need to generate all possible happy strings.
+The total number of happy strings of length n is: 3 × 2^(n−1)
+For each valid string, we may take up to O(n) time to build it.
+Therefore, the overall time complexity becomes: O(n × 2^n)
+
+Space complexity:
+The recursion can go up to a depth of n, and the current string being built also stores at most n characters. Therefore, the space complexity is:O(n)
+
+Code:-
+class Solution {
+    int count = 0;
+
+    public String getHappyString(int n, int k) {
+        int size = 3 * (int)Math.pow(2, n - 1);
+
+        if (k > size) return "";
+
+        StringBuilder sb = new StringBuilder();
+        return helper(n, k, sb);
+    }
+
+    public String helper(int n, int k, StringBuilder sb) {
+
+        if (sb.length() == n) {
+            count++;
+
+            if (count == k) {
+                return sb.toString();
+            }
+
+            return "";
+        }
+
+        if (sb.length() == 0 || sb.charAt(sb.length() - 1) != 'a') {
+            sb.append('a');
+            String s = helper(n, k, sb);
+            if (!s.equals("")) return s;
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        if (sb.length() == 0 || sb.charAt(sb.length() - 1) != 'b') {
+            sb.append('b');
+            String s = helper(n, k, sb);
+            if (!s.equals("")) return s;
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        if (sb.length() == 0 || sb.charAt(sb.length() - 1) != 'c') {
+            sb.append('c');
+            String s = helper(n, k, sb);
+            if (!s.equals("")) return s;
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        return "";
+    }
+}
