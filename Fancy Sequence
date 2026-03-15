@@ -1,0 +1,118 @@
+
+1622 Problem:-
+Write an API that generates fancy sequences using the append, addAll, and multAll operations.
+Implement the Fancy class:
+Fancy() Initializes the object with an empty sequence.
+void append(val) Appends an integer val to the end of the sequence.
+void addAll(inc) Increments all existing values in the sequence by an integer inc.
+void multAll(m) Multiplies all existing values in the sequence by an integer m.
+int getIndex(idx) Gets the current value at index idx (0-indexed) of the sequence modulo 109 + 7. If the index is greater or equal than the length of the sequence, return -1.
+ 
+Example 1:
+Input
+["Fancy", "append", "addAll", "append", "multAll", "getIndex", "addAll", "append", "multAll", "getIndex", "getIndex", "getIndex"]
+[[], [2], [3], [7], [2], [0], [3], [10], [2], [0], [1], [2]]
+Output
+[null, null, null, null, null, 10, null, null, null, 26, 34, 20]
+
+Explanation
+Fancy fancy = new Fancy();
+fancy.append(2);   // fancy sequence: [2]
+fancy.addAll(3);   // fancy sequence: [2+3] -> [5]
+fancy.append(7);   // fancy sequence: [5, 7]
+fancy.multAll(2);  // fancy sequence: [5*2, 7*2] -> [10, 14]
+fancy.getIndex(0); // return 10
+fancy.addAll(3);   // fancy sequence: [10+3, 14+3] -> [13, 17]
+fancy.append(10);  // fancy sequence: [13, 17, 10]
+fancy.multAll(2);  // fancy sequence: [13*2, 17*2, 10*2] -> [26, 34, 20]
+fancy.getIndex(0); // return 26
+fancy.getIndex(1); // return 34
+fancy.getIndex(2); // return 20
+ 
+Constraints:
+1 <= val, inc, m <= 100
+0 <= idx <= 105
+At most 105 calls total will be made to append, addAll, multAll, and getIndex.
+ 
+=================================================================================================================================================================
+
+Solution:-
+Intuition
+The goal is to create a sequence that allows for efficient updates and queries. The sequence supports the following operations:
+Append: Appends a value to the sequence.
+Add All: Adds an increment to all elements in the sequence.
+Multiply All: Multiplies all elements by a given factor.
+Get Index: Retrieves the value at a specific index, adjusted by previous operations.
+We will use modular arithmetic to ensure that values do not overflow. The sequence is designed to handle large numbers efficiently using modular inverse and fast power calculation (modular exponentiation).
+
+Approach
+The operations are optimized by tracking a global multiplier (a) and a global increment (b). These variables represent the combined effects of all previous addAll and multAll operations.
+append(val): When a new value is appended, it is adjusted using the global increment b and the modular inverse of the global multiplier a.
+addAll(inc): This operation adds inc to the global increment b, which will affect all subsequent operations.
+multAll(m): This operation multiplies all values by m by updating both the global multiplier a and the global increment b.
+getIndex(idx): This operation retrieves the value at the specified index, adjusted by both the global multiplier and increment.
+Helper Methods:
+Modular Exponentiation: Efficiently computes x^y % mod using exponentiation by squaring.
+Modular Inverse: Computes the inverse of a modulo MOD using Fermat's Little Theorem, which states that a^(MOD-2) % MOD is the modular inverse of a when MOD is prime.
+
+Complexity:
+Time Complexity:
+append(val): (O(1))
+addAll(inc) and multAll(m): (O(1))
+getIndex(idx): (O(1))
+modPow(x, y, mod): (O(\log y)), where y is the exponent in the modular exponentiation.
+Space Complexity: (O(n)), where n is the number of values appended.
+
+Code:-
+class Fancy {
+    private static final int MOD = 1000000007;
+    private ArrayList<Long> val;  
+    private long a, b;   
+
+    public Fancy() {
+        val = new ArrayList<>(); 
+        a = 1;
+        b = 0;
+    }
+
+    private long modPow(long x, long y, long mod) {
+        long res = 1;
+        x = x % mod;
+        while (y > 0) {
+            if (y % 2 == 1) {
+                res = (res * x) % mod;
+            }
+            y = y / 2;
+            x = (x * x) % mod;
+        }
+        return res;
+    }
+
+    public void append(int val) {
+        long x = (val - b + MOD) % MOD;
+        this.val.add((x * modPow(a, MOD - 2, MOD)) % MOD);  
+    }
+
+    public void addAll(int inc) {
+        b = (b + inc) % MOD;
+    }
+
+    public void multAll(int m) {
+        a = (a * m) % MOD;
+        b = (b * m) % MOD;
+    }
+
+    public int getIndex(int idx) {
+        if (idx >= val.size()) return -1; 
+        return (int)((a * val.get(idx) + b) % MOD);
+    }
+}
+
+/**
+ * Your Fancy object will be instantiated and called as such:
+ * Fancy obj = new Fancy();
+ * obj.append(val);
+ * obj.addAll(inc);
+ * obj.multAll(m);
+ * int param_4 = obj.getIndex(idx);
+ */
