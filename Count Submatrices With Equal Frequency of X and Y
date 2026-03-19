@@ -1,0 +1,101 @@
+
+3212 Problem:-
+Given a 2D character matrix grid, where grid[i][j] is either 'X', 'Y', or '.', return the number of submatrices that contain:
+grid[0][0]
+an equal frequency of 'X' and 'Y'.
+at least one 'X'.
+ 
+Example 1:
+Input: grid = [["X","Y","."],["Y",".","."]]
+Output: 3
+Explanation:
+
+Example 2:
+Input: grid = [["X","X"],["X","Y"]]
+Output: 0
+Explanation:
+No submatrix has an equal frequency of 'X' and 'Y'.
+
+Example 3:
+Input: grid = [[".","."],[".","."]]
+Output: 0
+Explanation:
+No submatrix has at least one 'X'.
+
+Constraints:
+1 <= grid.length, grid[i].length <= 1000
+grid[i][j] is either 'X', 'Y', or '.'.
+
+=============================================================================================================================================================
+
+🧠 Intuition
+We need to count submatrices that:
+✅ Include cell (0,0)
+✅ Have equal number of 'X' and 'Y'
+✅ Contain at least one 'X'
+
+🔑 Key Transformation
+Let’s convert the grid into numbers:
+'X' → +1 🟢
+'Y' → -1 🔴
+'.' → 0 ⚪
+Now the problem becomes:
+
+👉 Find submatrices (starting from (0,0)) such that:
+Sum = 0 → equal X and Y
+At least one X exists
+💡 Important Observation
+Since every valid submatrix must include (0,0),
+each submatrix is uniquely defined by its bottom-right corner (i, j).
+✨ So instead of checking all submatrices ❌
+we only check prefix submatrices (0,0) → (i,j) ✅
+
+🚀 Approach
+🔹 Step 1: Maintain Prefix Matrices
+We use two 2D prefix arrays:
+sum[i][j] → stores balance of X and Y
+cntX[i][j] → stores count of X
+
+🔹 Step 2: Build Prefix Sum
+For each cell:
+Add current value
+Add top and left
+Subtract overlap (top-left)
+📌 This gives us values for submatrix (0,0) → (i,j)
+
+🔹 Step 3: Count Valid Submatrices
+For every cell (i,j):
+If sum[i][j] == 0 → equal X and Y ⚖️
+If cntX[i][j] > 0 → at least one X ✅
+👉 Then increment answer
+
+⏱️ Complexity
+Time Complexity: O(n * m) 🚀
+Space Complexity: O(n * m) 📦
+
+
+💻 Code:-
+class Solution {
+    public int numberOfSubmatrices(char[][] grid) {
+        int rows = grid.length, cols = grid[0].length;
+        int[] sumX = new int[cols];
+        int[] sumY = new int[cols];
+        int res = 0;
+
+        for (int i = 0; i < rows; i++) {
+            int rx = 0, ry = 0;
+
+            for (int j = 0; j < cols; j++) {
+                if (grid[i][j] == 'X') rx++;
+                else if (grid[i][j] == 'Y') ry++;
+
+                sumX[j] += rx;
+                sumY[j] += ry;
+
+                if (sumX[j] > 0 && sumX[j] == sumY[j]) res++;
+            }
+        }
+
+        return res;
+    }
+}
