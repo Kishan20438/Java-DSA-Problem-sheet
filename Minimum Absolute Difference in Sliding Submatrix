@@ -1,4 +1,4 @@
-  
+   
 3567 Problem:-
 You are given an m x n integer matrix grid and an integer k.
 For every contiguous k x k submatrix of grid, compute the minimum absolute difference between any two distinct values within that submatrix.
