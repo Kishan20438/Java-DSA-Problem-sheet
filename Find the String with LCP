@@ -1,4 +1,4 @@
-
+ 
 2573 Problem:-
 We define the lcp matrix of any 0-indexed string word of n lowercase English letters as an n x n grid such that:
 lcp[i][j] is equal to the length of the longest common prefix between the substrings word[i,n-1] and word[j,n-1].
