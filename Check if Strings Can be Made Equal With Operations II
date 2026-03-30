@@ -1,0 +1,60 @@
+
+2840 Problem:-
+You are given two strings s1 and s2, both of length n, consisting of lowercase English letters.
+You can apply the following operation on any of the two strings any number of times:
+Choose any two indices i and j such that i < j and the difference j - i is even, then swap the two characters at those indices in the string.
+Return true if you can make the strings s1 and s2 equal, and false otherwise.
+
+Example 1:
+Input: s1 = "abcdba", s2 = "cabdab"
+Output: true
+Explanation: We can apply the following operations on s1:
+- Choose the indices i = 0, j = 2. The resulting string is s1 = "cbadba".
+- Choose the indices i = 2, j = 4. The resulting string is s1 = "cbbdaa".
+- Choose the indices i = 1, j = 5. The resulting string is s1 = "cabdab" = s2.
+
+Example 2:
+Input: s1 = "abe", s2 = "bea"
+Output: false
+Explanation: It is not possible to make the two strings equal.
+ 
+Constraints:-
+n == s1.length == s2.length
+1 <= n <= 105
+s1 and s2 consist only of lowercase English letters.
+
+======================================================================================================================================================================
+
+Solution:-
+Double Frequency Arrays (Better)
+Intuition
+Do we actually need to sort the characters? No! To know if two collections of characters are identical (a valid anagram), we just need to know if the count (frequency) 
+of each character is the exact same.
+Since the problem explicitly states the strings consist of only lowercase English letters, we can use fixed-size integer arrays of length 26 to act as lightning-fast 
+hash maps. We'll count the frequencies of characters at even indices and odd indices separately for both s1 and s2, and then just check if our frequency arrays match.
+
+Complexity
+Time complexity:- O(N)
+Space complexity:- O(1)
+
+Code:-
+class Solution {
+    public boolean checkStrings(String s1, String s2) {
+        int[] s1Even = new int[26];
+        int[] s1Odd = new int[26];
+        int[] s2Even = new int[26];
+        int[] s2Odd = new int[26];
+        
+        for (int i = 0; i < s1.length(); i++) {
+            if (i % 2 == 0) {
+                s1Even[s1.charAt(i) - 'a']++;
+                s2Even[s2.charAt(i) - 'a']++;
+            } else {
+                s1Odd[s1.charAt(i) - 'a']++;
+                s2Odd[s2.charAt(i) - 'a']++;
+            }
+        }
+        
+        return Arrays.equals(s1Even, s2Even) && Arrays.equals(s1Odd, s2Odd);
+    }
+}
