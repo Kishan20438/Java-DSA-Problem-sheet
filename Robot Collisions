@@ -1,0 +1,138 @@
+
+2751 Problem:-
+There are n 1-indexed robots, each having a position on a line, health, and movement direction.
+You are given 0-indexed integer arrays positions, healths, and a string directions (directions[i] is either 'L' for left or 'R' for right). All integers in positions are unique.
+All robots start moving on the line simultaneously at the same speed in their given directions. If two robots ever share the same position while moving, they will collide.
+If two robots collide, the robot with lower health is removed from the line, and the health of the other robot decreases by one. The surviving robot continues in the 
+same direction it was going. If both robots have the same health, they are both removed from the line.
+Your task is to determine the health of the robots that survive the collisions, in the same order that the robots were given, i.e. final health of robot 1 (if survived), 
+final health of robot 2 (if survived), and so on. If there are no survivors, return an empty array.
+Return an array containing the health of the remaining robots (in the order they were given in the input), after no further collisions can occur.
+Note: The positions may be unsorted.
+
+Example 1:
+Input: positions = [5,4,3,2,1], healths = [2,17,9,15,10], directions = "RRRRR"
+Output: [2,17,9,15,10]
+Explanation: No collision occurs in this example, since all robots are moving in the same direction. So, the health of the robots in order from the first robot is returned, 
+[2, 17, 9, 15, 10].
+
+Example 2:
+Input: positions = [3,5,2,6], healths = [10,10,15,12], directions = "RLRL"
+Output: [14]
+Explanation: There are 2 collisions in this example. Firstly, robot 1 and robot 2 will collide, and since both have the same health, they will be removed from the line. Next, 
+robot 3 and robot 4 will collide and since robot 4's health is smaller, it gets removed, and robot 3's health becomes 15 - 1 = 14. Only robot 3 remains, so we return [14].
+
+Example 3:
+Input: positions = [1,2,5,6], healths = [10,10,11,11], directions = "RLRL"
+Output: []
+Explanation: Robot 1 and robot 2 will collide and since both have the same health, they are both removed. Robot 3 and 4 will collide and since both have the same health, 
+they are both removed. So, we return an empty array, [].
+ 
+Constraints:
+1 <= positions.length == healths.length == directions.length == n <= 105
+1 <= positions[i], healths[i] <= 109
+directions[i] == 'L' or directions[i] == 'R'
+All values in positions are distinct
+
+===================================================================================================================================================================
+
+Solution:-
+Intuition
+... Only R meeting L causes a collision - LL, RR, and LR (moving apart) never collide.
+... Process robots in order of position so collisions happen naturally from left to right.
+... A stack is perfect here: push R robots in, and when an L robot arrives, it fights the top of the stack.
+... Original order must be preserved at the end, so track each robot's original index throughout.
+
+Approach
+Step 1: Sort by position
+Create an index array order sorted by position. This lets us process robots in physical order without touching the original arrays.
+
+Step 2: Simulate collisions with a stack
+The stack stores original indices of surviving R robots. For each robot in position order:
+if dir == 'R'  --> push index onto stack
+if dir == 'L'  --> fight stack top while top is 'R':
+    top.health > current.health  --> top survives (top.health--), current dies, break
+    top.health < current.health  --> current survives (current.health--), pop top, continue
+    equal                        --> both die, break
+If L robot survives all fights, push its index too.
+
+Step 3: Restore original order
+Remaining indices in stack are survivors. Sort them by original index and collect their healths.
+Dry Run
+positions  = [3, 5, 2, 6]
+healths    = [10,10,15,12]
+directions = "RLRL"
+order (sorted by position): [2, 0, 1, 3]
+  index 2 --> pos=2, health=15, dir=R
+  index 0 --> pos=3, health=10, dir=R
+  index 1 --> pos=5, health=10, dir=L
+  index 3 --> pos=6, health=12, dir=L
+index 2 (R): push
+stack: [2]
+index 0 (R): push
+stack: [2, 0]
+index 1 (L): fight begins, health=10
+top=0, healths[0]=10  equal  -->  both die, health=-1, pop 0
+stack: [2]
+index 3 (L): fight begins, health=12
+top=2, healths[2]=15  15>12  -->  healths[2]=14, health=-1, break
+stack: [2]
+Survivors: stack = [2], sort by index --> [2]
+result = [healths[2]] = [14]
+Answer = [14] ✓
+
+Complexity
+Time complexity: O(nlogn) ... sorting dominates; each robot is pushed and popped at most once so the collision loop is O(n) total.
+Space complexity: O(n) ... stack and order array each hold at most n entries.
+
+Code:-
+class Solution {
+    public List<Integer> survivedRobotsHealths(int[] pos, int[] h, String d) {
+
+        int n = pos.length;
+        Integer[] order = new Integer[n];
+        for(int i=0;i<n;i++) order[i]=i;
+
+        Arrays.sort(order,(a,b)->pos[a]-pos[b]);
+
+        boolean[] alive = new boolean[n];
+        Arrays.fill(alive,true);
+
+        Deque<Integer> st = new ArrayDeque<>();
+
+        for(int idx:order){
+
+            if(d.charAt(idx)=='R') st.push(idx);
+
+            else{
+                while(!st.isEmpty()){
+
+                    int top = st.peek();
+
+                    if(h[top] < h[idx]){
+                        alive[top]=false;
+                        st.pop();
+                        h[idx]--;
+                    }
+                    else if(h[top] > h[idx]){
+                        alive[idx]=false;
+                        h[top]--;
+                        break;
+                    }
+                    else{
+                        alive[top]=false;
+                        alive[idx]=false;
+                        st.pop();
+                        break;
+                    }
+                }
+            }
+        }
+
+        List<Integer> res=new ArrayList<>();
+        for(int i=0;i<n;i++)
+            if(alive[i]) res.add(h[i]);
+
+        return res;
+    }
+}
