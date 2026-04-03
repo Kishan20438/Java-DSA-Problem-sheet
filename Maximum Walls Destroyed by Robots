@@ -1,0 +1,176 @@
+
+3661 Problem:-
+There is an endless straight line populated with some robots and walls. You are given integer arrays robots, distance, and walls:
+robots[i] is the position of the ith robot.
+distance[i] is the maximum distance the ith robot's bullet can travel.
+walls[j] is the position of the jth wall.
+Every robot has one bullet that can either fire to the left or the right at most distance[i] meters.
+A bullet destroys every wall in its path that lies within its range. Robots are fixed obstacles: if a bullet hits another robot before reaching a wall, 
+it immediately stops at that robot and cannot continue.
+Return the maximum number of unique walls that can be destroyed by the robots.
+
+Notes:
+A wall and a robot may share the same position; the wall can be destroyed by the robot at that position.
+Robots are not destroyed by bullets.
+ 
+Example 1:
+Input: robots = [4], distance = [3], walls = [1,10]
+Output: 1
+Explanation:
+robots[0] = 4 fires left with distance[0] = 3, covering [1, 4] and destroys walls[0] = 1.
+Thus, the answer is 1.
+
+Example 2:
+Input: robots = [10,2], distance = [5,1], walls = [5,2,7]
+Output: 3
+Explanation:
+robots[0] = 10 fires left with distance[0] = 5, covering [5, 10] and destroys walls[0] = 5 and walls[2] = 7.
+robots[1] = 2 fires left with distance[1] = 1, covering [1, 2] and destroys walls[1] = 2.
+Thus, the answer is 3.
+
+Example 3:
+Input: robots = [1,2], distance = [100,1], walls = [10]
+Output: 0
+Explanation:
+In this example, only robots[0] can reach the wall, but its shot to the right is blocked by robots[1]; thus the answer is 0.
+
+Constraints:-
+1 <= robots.length == distance.length <= 105
+1 <= walls.length <= 105
+1 <= robots[i], walls[j] <= 109
+1 <= distance[i] <= 105
+All values in robots are unique
+All values in walls are unique
+
+======================================================================================================================================================================
+
+Solution:-
+
+Intuition:-
+The problem asks us to make a binary choice for each robot: move left or move right, maximizing the total number of walls covered. Because the robots are ordered and their coverage is explicitly bounded by the starting positions of their immediate neighbors, the optimal choice for robot i depends entirely on the coverage of robot i−1. This sequential dependency with overlapping subproblems makes it an ideal candidate for Dynamic Programming (DP).
+
+Approach:-
+Sort and Pair: First, pair the robots with their respective distances and sort them by their starting positions. Sort the walls array to allow for O(logM) range queries using binary search.
+Determine Intervals: For each robot, calculate the exact intervals it covers if it moves left or right. A robot cannot cross the initial position of an adjacent robot, so its movement is bounded by left_block and right_block. We use long long to prevent integer overflow when adding or subtracting the distance.
+Dynamic Programming: - Define a state dp[i][0] as the maximum walls covered by the first i robots, given that the i-th robot moves left.
+Define a state dp[i][1] as the maximum walls covered by the first i robots, given that the i-th robot moves right.
+Transition & Overlap Handling: As we iterate through the robots, we calculate the new walls covered by robot i. If the coverage interval of robot i overlaps with the coverage interval of robot i−1, we must avoid double-counting walls. We do this by adjusting the starting point of our counting interval to max(current_left_bound, prev_right_bound + 1).
+Counting: Use std::lower_bound and std::upper_bound to efficiently count the number of walls within the newly covered intervals.
+
+Complexity:-
+Time complexity:
+Sorting the walls takes O(MlogM), where M is the number of walls.
+Sorting the robots takes O(NlogN), where N is the number of robots.
+The DP loop runs N times, and in each iteration, we perform binary searches over the walls array, taking O(logM) time. Thus, the DP phase takes O(NlogM).
+Total Time Complexity: O(MlogM+NlogN+NlogM).
+
+Space complexity:
+Storing the paired robots (vp), the intervals array, and the dp table each takes O(N) space.
+Total Space Complexity: O(N) auxiliary space.
+
+Code:-
+import java.util.Arrays;
+
+class Solution {
+    public int maxWalls(int[] robots, int[] distance, int[] walls) {
+        int n = robots.length;
+        if (n == 0) return 0;
+
+        Arrays.sort(walls);
+
+        // Pair robots with distances and sort by robot position
+        long[][] vp = new long[n][2];
+        for (int i = 0; i < n; i++) {
+            vp[i][0] = robots[i];
+            vp[i][1] = distance[i];
+        }
+        Arrays.sort(vp, (a, b) -> Long.compare(a[0], b[0]));
+
+        // Using long to prevent pos + d or pos - d from overflowing
+        long[][] intervals = new long[n][4];
+
+        for (int i = 0; i < n; i++) {
+            long pos = vp[i][0];
+            long d = vp[i][1];
+
+            long left_block = (i > 0 ? vp[i-1][0] : Long.MIN_VALUE);
+            long right_block = (i < n - 1 ? vp[i+1][0] : Long.MAX_VALUE);
+
+            intervals[i][0] = Math.max(pos - d, left_block);
+            intervals[i][1] = pos;
+            intervals[i][2] = pos;
+            intervals[i][3] = Math.min(pos + d, right_block);
+        }
+
+        int[][] dp = new int[n][2];
+
+        dp[0][0] = getCount(walls, intervals[0][0], intervals[0][1]);
+        dp[0][1] = getCount(walls, intervals[0][2], intervals[0][3]);
+
+        for (int i = 1; i < n; i++) {
+            long l1 = intervals[i][0], r1 = intervals[i][1];
+            long l2 = intervals[i][2], r2 = intervals[i][3];
+
+            long prev_r_left = intervals[i-1][1];
+            long prev_r_right = intervals[i-1][3];
+
+            // LEFT
+            // Added + 1 to prev_r to avoid double-counting walls on the exact boundary
+            int addL_from_left = getCount(walls, Math.max(l1, prev_r_left + 1), r1);
+            int addL_from_right = getCount(walls, Math.max(l1, prev_r_right + 1), r1);
+
+            dp[i][0] = Math.max(
+                dp[i-1][0] + addL_from_left,
+                dp[i-1][1] + addL_from_right
+            );
+
+            // RIGHT
+            // Added + 1 to prev_r to avoid double-counting walls on the exact boundary
+            int addR_from_left = getCount(walls, Math.max(l2, prev_r_left + 1), r2);
+            int addR_from_right = getCount(walls, Math.max(l2, prev_r_right + 1), r2);
+
+            dp[i][1] = Math.max(
+                dp[i-1][0] + addR_from_left,
+                dp[i-1][1] + addR_from_right
+            );
+        }
+
+        return Math.max(dp[n-1][0], dp[n-1][1]);
+    }
+
+    private int getCount(int[] walls, long l, long r) {
+        // Prevent negative returns when lower bound > upper bound
+        if (l > r) return 0;
+        int it1 = lowerBound(walls, l);
+        int it2 = upperBound(walls, r);
+        return it2 - it1;
+    }
+
+    // Equivalent to C++ std::lower_bound
+    private int lowerBound(int[] arr, long target) {
+        int low = 0, high = arr.length;
+        while (low < high) {
+            int mid = low + (high - low) / 2;
+            if (arr[mid] >= target) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return low;
+    }
+
+    // Equivalent to C++ std::upper_bound
+    private int upperBound(int[] arr, long target) {
+        int low = 0, high = arr.length;
+        while (low < high) {
+            int mid = low + (high - low) / 2;
+            if (arr[mid] > target) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return low;
+    }
+}
