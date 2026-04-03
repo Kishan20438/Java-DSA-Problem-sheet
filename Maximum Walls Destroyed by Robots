@@ -1,4 +1,4 @@
-  
+   
 3661 Problem:-
 There is an endless straight line populated with some robots and walls. You are given integer arrays robots, distance, and walls:
 robots[i] is the position of the ith robot.
