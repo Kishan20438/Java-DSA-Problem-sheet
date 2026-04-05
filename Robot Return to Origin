@@ -1,0 +1,63 @@
+
+657 Problem:-
+There is a robot starting at the position (0, 0), the origin, on a 2D plane. Given a sequence of its moves, judge if this robot ends up at (0, 0) after it completes its moves.
+You are given a string moves that represents the move sequence of the robot where moves[i] represents its ith move. Valid moves are 'R' (right), 'L' (left), 'U' (up), and 'D' (down).
+Return true if the robot returns to the origin after it finishes all of its moves, or false otherwise.
+Note: The way that the robot is "facing" is irrelevant. 'R' will always make the robot move to the right once, 'L' will always make it move left, etc. Also, assume that the 
+magnitude of the robot's movement is the same for each move.
+
+Example 1:
+Input: moves = "UD"
+Output: true
+Explanation: The robot moves up once, and then down once. All moves have the same magnitude, so it ended up at the origin where it started. Therefore, we return true.
+
+Example 2:
+Input: moves = "LL"
+Output: false
+Explanation: The robot moves left twice. It ends up two "moves" to the left of the origin. We return false because it is not at the origin at the end of its moves.
+ 
+Constraints:
+1 <= moves.length <= 2 * 104
+moves only contains the characters 'U', 'D', 'L' and 'R'.
+
+================================================================================================================================================================
+
+Solution:-
+Intuition:-
+The robot starts at the origin (0,0) and moves based on given directions.
+To return to the origin:
+Total left moves must cancel right moves
+Total up moves must cancel down moves
+So we just track horizontal and vertical displacement.
+
+Approach :-
+Initialize two counters:
+c1 → horizontal movement (L/R)
+c2 → vertical movement (U/D)
+Traverse the string:
+L → +1, R → -1
+U → +1, D → -1
+After processing:
+If both counters are 0 → back to origin ✅
+Else → not at origin ❌
+
+Complexity :-
+Time complexity:O(n)
+Space complexity:O(1)
+
+Code:-
+class Solution {
+    public boolean judgeCircle(String moves) {
+        int c1 = 0; // horizontal
+        int c2 = 0; // vertical
+
+        for (char ch : moves.toCharArray()) {
+            if (ch == 'L') c1++;
+            else if (ch == 'R') c1--;
+            else if (ch == 'U') c2++;
+            else if (ch == 'D') c2--;
+        }
+
+        return c1 == 0 && c2 == 0;
+    }
+}
