@@ -1,0 +1,170 @@
+
+874 Problem :-
+A robot on an infinite XY-plane starts at point (0, 0) facing north. The robot receives an array of integers commands, which represents a sequence of moves that it needs 
+to execute. There are only three possible types of instructions the robot can receive:
+-2: Turn left 90 degrees.
+-1: Turn right 90 degrees.
+1 <= k <= 9: Move forward k units, one unit at a time.
+Some of the grid squares are obstacles. The ith obstacle is at grid point obstacles[i] = (xi, yi). If the robot runs into an obstacle, it will stay in its current location 
+(on the block adjacent to the obstacle) and move onto the next command.
+Return the maximum squared Euclidean distance that the robot reaches at any point in its path (i.e. if the distance is 5, return 25).
+
+Note:
+There can be an obstacle at (0, 0). If this happens, the robot will ignore the obstacle until it has moved off the origin. However, it will be unable to return to (0, 0)
+due to the obstacle.
+North means +Y direction.
+East means +X direction.
+South means -Y direction.
+West means -X direction.
+ 
+Example 1:
+Input: commands = [4,-1,3], obstacles = []
+Output: 25
+Explanation:
+The robot starts at (0, 0):
+Move north 4 units to (0, 4).
+Turn right.
+Move east 3 units to (3, 4).
+The furthest point the robot ever gets from the origin is (3, 4), which squared is 32 + 42 = 25 units away.
+
+Example 2:
+Input: commands = [4,-1,4,-2,4], obstacles = [[2,4]]
+Output: 65
+Explanation:
+The robot starts at (0, 0):
+Move north 4 units to (0, 4).
+Turn right.
+Move east 1 unit and get blocked by the obstacle at (2, 4), robot is at (1, 4).
+Turn left.
+Move north 4 units to (1, 8).
+The furthest point the robot ever gets from the origin is (1, 8), which squared is 12 + 82 = 65 units away.
+
+Example 3:
+Input: commands = [6,-1,-1,6], obstacles = [[0,0]]
+Output: 36
+Explanation:
+The robot starts at (0, 0):
+Move north 6 units to (0, 6).
+Turn right.
+Turn right.
+Move south 5 units and get blocked by the obstacle at (0,0), robot is at (0, 1).
+The furthest point the robot ever gets from the origin is (0, 6), which squared is 62 = 36 units away.
+
+Constraints:
+1 <= commands.length <= 104
+commands[i] is either -2, -1, or an integer in the range [1, 9].
+0 <= obstacles.length <= 104
+-3 * 104 <= xi, yi <= 3 * 104
+The answer is guaranteed to be less than 231.
+
+=================================================================================================================================================================
+
+Solution :-
+Intuition
+The problem can be approached by simulating the robot’s movement exactly as described, rather than trying to compute positions directly.
+Since the robot moves one unit at a time, even for a command like “move k steps”, we must process it step-by-step. This is important because an obstacle may block the 
+path in between, and the robot must stop immediately before hitting it.
+To efficiently handle obstacle detection, we store all obstacle positions in a HashSet, allowing constant-time checks to see whether the next position is blocked.
+
+We maintain:
+the robot’s current position (x, y)
+its current facing direction
+For each command:
+If it is a turn command, we simply update the direction.
+If it is a movement command, we move step-by-step in the current direction, checking at each step whether the next position is an obstacle.
+While moving, we continuously track the robot’s distance from the origin and update the maximum distance reached.
+Thus, the core idea is to simulate movement carefully, check obstacles at every step, and track the maximum distance achieved during the process.
+
+Approach
+Store obstacles for fast lookup
+Convert each obstacle coordinate into a string "x,y" and store it in a HashSet.
+This allows checking whether a position is blocked in O(1) time.
+
+Initialize variables
+Start at position (x, y) = (0, 0)
+Set initial direction as 'N' (North)
+Maintain a variable max to store the maximum squared distance
+Process each command
+
+Traverse the commands array one by one
+a. Turning commands
+If command is -1 (turn right): update direction clockwise
+If command is -2 (turn left): update direction anticlockwise
+b. Movement commands (k steps)
+Move one step at a time (loop from 0 to k-1)
+
+For each step:
+Compute the next position based on current direction
+Check if this next position exists in the obstacle set
+If yes → stop moving further for this command
+If no → update (x, y) to this new position
+Update maximum distance
+After completing each movement command, compute:
+distance = x*x + y*y
+Update max with the maximum value
+
+Return result
+After processing all commands, return max as the answer
+
+Time Complexity (TC)
+Let:
+n = commands.length
+m = obstacles.length
+Storing obstacles in the HashSet takes O(m)
+For each command:
+Turning commands take O(1)
+Movement commands (max value = 9) take up to O(9) ≈ O(1) per command
+So total movement processing is O(n)
+Overall TC: O(n + m)
+
+Space Complexity (SC)
+HashSet stores all obstacles → O(m)
+Other variables use constant space
+Overall SC: O(m)
+
+Code:-
+class Solution {
+    public int robotSim(int[] commands, int[][] obstacles) {
+        // store obstacles
+        Set<Long> st = new HashSet<>();
+
+        for (int[] o : obstacles) {
+            long key = (((long)o[0]) << 32) | (o[1] & 0xffffffffL);
+            st.add(key);
+        }
+
+        int[][] dir = {
+            {0,1}, {1,0}, {0,-1}, {-1,0}
+        };
+
+        int d = 0; // North
+        int x = 0, y = 0;
+        int ans = 0;
+
+        for (int cmd : commands) {
+            if (cmd == -1) {
+                d = (d + 1) % 4;
+            } 
+            else if (cmd == -2) {
+                d = (d + 3) % 4;
+            } 
+            else {
+                for (int i = 0; i < cmd; i++) {
+                    int nx = x + dir[d][0];
+                    int ny = y + dir[d][1];
+
+                    long key = (((long)nx) << 32) | (ny & 0xffffffffL);
+
+                    if (st.contains(key)) break;
+
+                    x = nx;
+                    y = ny;
+
+                    ans = Math.max(ans, x*x + y*y);
+                }
+            }
+        }
+
+        return ans;
+    }
+}
