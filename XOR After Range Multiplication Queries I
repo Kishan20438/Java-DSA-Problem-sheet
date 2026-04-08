@@ -1,0 +1,91 @@
+
+3653 Problem:-
+You are given an integer array nums of length n and a 2D integer array queries of size q, where queries[i] = [li, ri, ki, vi].
+For each query, you must apply the following operations in order:
+Set idx = li.
+While idx <= ri:
+Update: nums[idx] = (nums[idx] * vi) % (109 + 7)
+Set idx += ki.
+Return the bitwise XOR of all elements in nums after processing all queries.
+
+Example 1:
+Input: nums = [1,1,1], queries = [[0,2,1,4]]
+Output: 4
+Explanation:
+A single query [0, 2, 1, 4] multiplies every element from index 0 through index 2 by 4.
+The array changes from [1, 1, 1] to [4, 4, 4].
+The XOR of all elements is 4 ^ 4 ^ 4 = 4.
+
+Example 2:
+Input: nums = [2,3,1,5,4], queries = [[1,4,2,3],[0,2,1,2]]
+Output: 31
+Explanation:
+The first query [1, 4, 2, 3] multiplies the elements at indices 1 and 3 by 3, transforming the array to [2, 9, 1, 15, 4].
+The second query [0, 2, 1, 2] multiplies the elements at indices 0, 1, and 2 by 2, resulting in [4, 18, 2, 15, 4].
+Finally, the XOR of all elements is 4 ^ 18 ^ 2 ^ 15 ^ 4 = 31.​​​​​​​​​​​​​​
+ 
+Constraints:-
+1 <= n == nums.length <= 103
+1 <= nums[i] <= 109
+1 <= q == queries.length <= 103
+queries[i] = [li, ri, ki, vi]
+0 <= li <= ri < n
+1 <= ki <= n
+1 <= vi <= 105
+
+================================================================================================================================================================
+
+Solution:-
+Intuition
+Each query updates only specific indices following a step pattern (li, li + k, li + 2k, ...). Over multiple queries, every index gets multiplied by some values 
+depending on how many times it is hit.
+So instead of thinking in terms of ranges, think per index:
+Track how each index is affected across all queries.
+The final value at an index is its initial value multiplied by all corresponding v values (modulo applied each time).
+Since constraints are small, directly simulating these updates is sufficient. After all updates, compute the XOR of the final array.
+
+Approach :-
+Process queries sequentially
+For each query [l, r, k, v], start from index l and keep jumping by k (l, l+k, l+2k, ...) until r.
+Apply multiplication safely
+For every valid index idx, update:
+nums[idx] = (int)((1L * nums[idx] * v) % MOD);
+1L * nums[idx] * v ensures multiplication happens in long to avoid overflow
+Without this, nums[idx] * v may exceed int range before modulo is applied
+Repeat for all queries
+Since each update affects future operations, queries must be processed in order.
+Compute final XOR
+After all updates, iterate through the array and compute:
+ans ^= nums[i];
+Return the result
+
+Time Complexity :-
+Each query can touch up to n elements in the worst case.
+Total complexity: O(q * n)
+Space Complexity
+No extra space used apart from variables: O(1)
+
+Code:-
+class Solution {
+    int MOD = 1_000_000_007;
+
+    public int xorAfterQueries(int[] nums, int[][] queries) {
+        for (int[] query : queries) {
+            int l = query[0];
+            int r = query[1];
+            int k = query[2];
+            int v = query[3];
+
+            for (int i = l; i <= r; i += k) {
+                nums[i] = (int)((1L * nums[i] * v) % MOD);
+            }
+        }
+
+        int ans = 0;
+        for (int num : nums) {
+            ans ^= num;
+        }
+
+        return ans;
+    }
+}
