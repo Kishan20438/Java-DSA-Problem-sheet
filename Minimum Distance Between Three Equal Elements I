@@ -1,4 +1,4 @@
-    
+     
 3740 Problem :-
 You are given an integer array nums.
 A tuple (i, j, k) of 3 distinct indices is good if nums[i] == nums[j] == nums[k].
