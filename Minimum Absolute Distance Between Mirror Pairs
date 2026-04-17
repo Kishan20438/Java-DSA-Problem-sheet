@@ -1,0 +1,79 @@
+
+3761 Program :-
+You are given an integer array nums.
+A mirror pair is a pair of indices (i, j) such that:
+0 <= i < j < nums.length, and
+reverse(nums[i]) == nums[j], where reverse(x) denotes the integer formed by reversing the digits of x. Leading zeros are omitted after reversing, for example reverse(120) = 21.
+Return the minimum absolute distance between the indices of any mirror pair. The absolute distance between indices i and j is abs(i - j).
+If no mirror pair exists, return -1.
+
+Example 1:
+Input: nums = [12,21,45,33,54]
+Output: 1
+Explanation:
+The mirror pairs are:
+(0, 1) since reverse(nums[0]) = reverse(12) = 21 = nums[1], giving an absolute distance abs(0 - 1) = 1.
+(2, 4) since reverse(nums[2]) = reverse(45) = 54 = nums[4], giving an absolute distance abs(2 - 4) = 2.
+The minimum absolute distance among all pairs is 1.
+
+Example 2:
+Input: nums = [120,21]
+Output: 1
+Explanation:
+There is only one mirror pair (0, 1) since reverse(nums[0]) = reverse(120) = 21 = nums[1].
+The minimum absolute distance is 1.
+
+Example 3:
+Input: nums = [21,120]
+Output: -1
+Explanation:
+There are no mirror pairs in the array.
+
+Constraints:-
+1 <= nums.length <= 105
+1 <= nums[i] <= 109​​​​​​​
+
+=====================================================================================================================================================================
+
+Solution :-
+🧠 Intuition
+For each number, if we reverse its digits and find that reversed version somewhere else in the array, we've found a mirror pair. The key insight is: instead of checking 
+every pair (which would be O(n²)), we can use a HashMap to remember where we've seen each number before. As we walk through the array, for each number we ask: "Have I seen 
+the reverse of this number at some earlier index?" If yes, we've found a mirror pair instantly! 🎯
+
+🔍 Approach
+Create a HashMap that maps reverse(nums[i]) → the most recent index it was seen at (just one integer, not a list!).
+Iterate through the array. For each element nums[j] at index j:
+Check if nums[j] exists as a key in the map.
+If yes, the stored index i is the closest previous mirror, so compute j - i and update the minimum distance.
+Store reverse(nums[j]) → j, overwriting any older index (we only ever need the most recent one).
+If the minimum distance was ever updated, return it; otherwise return -1.
+💡 Why only the last index? We scan left to right, so the most recently stored index is always the closest one. Keeping all indices and looping over them leads to O(n²) for inputs like [11, 11, 11, ...].
+💡 Note: A number can be its own reverse (e.g., 33), so palindrome numbers also form mirror pairs at different indices!
+
+⏱️ Complexity
+Time complexity: O(n) — We iterate through the array once, and each reverse + map lookup is O(d) where d is the number of digits (at most 10), so effectively O(n).
+Space complexity: O(n) — The HashMap stores at most n entries.
+
+💻 Code
+☕ Java
+
+class Solution {
+    public int minMirrorPairDistance(int[] nums) {
+        int res = 100000, i = 0;
+        HashMap<Integer, Integer> seen = new HashMap<>();
+
+        for (int n : nums) {
+            int r;
+            if (seen.containsKey(n))
+                res = Math.min(res, i - seen.get(n));
+
+            for (r = 0; n > 0; n /= 10)
+                r = r * 10 + (n % 10);
+
+            seen.put(r, i++);
+        }
+
+        return res == 100000 ? -1 : res;
+    }
+}
