@@ -1,4 +1,4 @@
- 
+  
 2833 Problem:-
 You are given a string moves of length n consisting only of characters 'L', 'R', and '_'. The string represents your movement on a number line starting from the origin 0.
 In the ith move, you can choose one of the following directions:
