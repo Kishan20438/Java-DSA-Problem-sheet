@@ -1,0 +1,122 @@
+
+3464 Problem :-
+You are given an integer side, representing the edge length of a square with corners at (0, 0), (0, side), (side, 0), and (side, side) on a Cartesian plane.
+You are also given a positive integer k and a 2D integer array points, where points[i] = [xi, yi] represents the coordinate of a point lying on the boundary of the square.
+You need to select k elements among points such that the minimum Manhattan distance between any two points is maximized.
+Return the maximum possible minimum Manhattan distance between the selected k points.
+The Manhattan Distance between two cells (xi, yi) and (xj, yj) is |xi - xj| + |yi - yj|.
+
+Example 1:
+Input: side = 2, points = [[0,2],[2,0],[2,2],[0,0]], k = 4
+Output: 2
+Explanation:
+Select all four points.
+
+Example 2:
+Input: side = 2, points = [[0,0],[1,2],[2,0],[2,2],[2,1]], k = 4
+Output: 1
+Explanation:
+Select the points (0, 0), (2, 0), (2, 2), and (2, 1).
+
+Example 3:
+Input: side = 2, points = [[0,0],[0,1],[0,2],[1,2],[2,0],[2,2],[2,1]], k = 5
+Output: 1
+Explanation:
+Select the points (0, 0), (0, 1), (0, 2), (1, 2), and (2, 2).
+
+Constraints:-
+1 <= side <= 109
+4 <= points.length <= min(4 * side, 15 * 103)
+points[i] == [xi, yi]
+The input is generated such that:
+points[i] lies on the boundary of the square.
+All points[i] are unique.
+4 <= k <= min(25, points.length)
+ 
+=======================================================================================================================================================================
+
+Solution:-
+Intuition
+The problem involves determining the maximum possible distance between points, ensuring that a certain number of moves (k) is achieved. The main challenge is to ensure 
+that the points are processed in such a way that the distance between them is maximized under the given constraints.
+
+Approach :-
+Point Classification: We first classify the points into four categories based on their positions relative to the four sides of a square (Left, Top, Right, and Bottom).
+Sorting Points: The points are then sorted in a clockwise direction to allow for easier traversal and calculation of distances.
+Binary Search: We use binary search to find the largest possible distance that allows at least k valid moves (determined by a check function).
+Checking Validity: The check function validates if it's possible to achieve k valid moves with a given distance m by comparing the distance between points and checking if 
+we can make enough moves to satisfy the condition.
+Updating Result: During the binary search, the best result (maximum distance) is updated.
+
+Complexity:-
+Time complexity:
+Sorting the points takes (O(n \log n)), where (n) is the number of points.
+The binary search takes (O(\log(\text{side}))), and for each binary search step, the check function processes all points, making the overall time complexity (O(n \log n \log(\text{side}))).
+
+Space complexity :-
+The space complexity is (O(n)) due to the storage of points and the deque for processing.
+
+Code :-
+class Solution {
+    public int maxDistance(int side, int[][] points, int k) {
+        long[] res = new long[points.length];
+        long lSide = (long) side;
+
+        for (int i = 0; i < points.length; i++) {
+            long x = points[i][0];
+            long y = points[i][1];
+            if (x == 0) res[i] = y;
+            else if (y == lSide) 
+                res[i] = lSide + x;
+            else if (x == lSide) 
+                res[i] = lSide * 3 - y;
+            else res[i] = lSide * 4 - x;
+        }
+        Arrays.sort(res);
+
+        int left = 1;
+        int right = (int) ((lSide * 4) / k) + 1;
+        
+        while (left + 1 < right) {
+            int mid = left + (right - left) / 2;
+            if (check(mid, res, lSide, k)) 
+                left = mid;
+            else right = mid;
+        }
+        return left;
+    }
+
+    private boolean check(int n, long[] res, long lSide, int k) {
+        int m = res.length;
+        int[] idx = new int[k];
+        long perimeter = lSide * 4;
+        
+        idx[0] = 0;
+        long curr = res[0];
+        for (int i = 1; i < k; i++) {
+            int pos = Arrays.binarySearch(res, curr + n);
+            if (pos < 0) 
+                pos = -(pos + 1);
+            if (pos == m) 
+                return false;
+            idx[i] = pos;
+            curr = res[pos];
+        }
+        
+        if (res[idx[k - 1]] - res[0] <= perimeter - n) 
+            return true;
+
+        for (idx[0] = 1; idx[0] < idx[1]; idx[0]++) {
+            for (int j = 1; j < k; j++) {
+                while (idx[j] < m && res[idx[j]] < res[idx[j - 1]] + n) {
+                    idx[j]++;
+                }
+                if (idx[j] == m) 
+                    return false;
+            }
+            if (res[idx[k - 1]] - res[idx[0]] <= perimeter - n) 
+                return true;
+        }
+        return false;
+    }
+}
