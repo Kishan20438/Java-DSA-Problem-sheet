@@ -1,0 +1,94 @@
+
+2033 Problem:-
+You are given a 2D integer grid of size m x n and an integer x. In one operation, you can add x to or subtract x from any element in the grid.
+A uni-value grid is a grid where all the elements of it are equal.
+Return the minimum number of operations to make the grid uni-value. If it is not possible, return -1.
+
+Example 1:
+Input: grid = [[2,4],[6,8]], x = 2
+Output: 4
+Explanation: We can make every element equal to 4 by doing the following: 
+- Add x to 2 once.
+- Subtract x from 6 once.
+- Subtract x from 8 twice.
+A total of 4 operations were used.
+
+Example 2:
+Input: grid = [[1,5],[2,3]], x = 1
+Output: 5
+Explanation: We can make every element equal to 3.
+
+Example 3:
+Input: grid = [[1,2],[3,4]], x = 2
+Output: -1
+Explanation: It is impossible to make every element equal.
+ 
+Constraints:
+m == grid.length
+n == grid[i].length
+1 <= m, n <= 105
+1 <= m * n <= 105
+1 <= x, grid[i][j] <= 104
+
+==============================================================================={={================{{===============================================
+
+Solution :-
+
+Intuition
+Each operation changes a value by exactly x, so any element can only be transformed into values that differ from it by a multiple of x. Therefore, for all elements to become equal, they must all have the same remainder when divided by x. If this condition is not satisfied, it is impossible.
+If the condition holds, the problem reduces to choosing a target value such that the total number of operations is minimized. Since each operation corresponds to reducing absolute differences, the optimal choice is the median of all elements. The median minimizes the sum of absolute deviations, which directly minimizes the number of operations required.
+
+Approach
+First, convert the 2D grid into a 1D list so all elements can be handled uniformly.
+Sort this list to easily determine the median element. The median will act as the target value because it minimizes the total number of operations.
+Select the median from the sorted list.
+Now iterate through each element:
+Compute the absolute difference between the current element and the median.
+Check if this difference is divisible by x. If not, return -1 since it is impossible to make all elements equal.
+Otherwise, divide the difference by x to get the number of operations required for that element and add it to the total.
+Finally, return the total number of operations.
+
+Time Complexity
+Flattening the grid takes O(n × m)
+Sorting the list takes O(nm log(nm))
+Traversing the list to compute operations takes O(n × m)
+Overall time complexity: O(nm log(nm))
+
+Space Complexity
+Storing all elements in a list takes O(n × m)
+Overall space complexity: O(nm)
+
+Code :-
+class Solution {
+    public int minOperations(int[][] grid, int x) {
+        List<Integer> arr = new ArrayList<>();
+
+        // flatten grid
+        for(int[] row : grid){
+            for(int v : row){
+                arr.add(v);
+            }
+        }
+
+        // check divisibility
+        int base = arr.get(0);
+        for(int v : arr){
+            if(Math.abs(v - base) % x != 0)
+                return -1;
+        }
+
+        // sort
+        Collections.sort(arr);
+
+        // median
+        int median = arr.get(arr.size()/2);
+
+        // count operations
+        int ops = 0;
+        for(int v : arr){
+            ops += Math.abs(v - median) / x;
+        }
+
+        return ops;
+    }
+}
