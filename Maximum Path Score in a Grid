@@ -1,0 +1,146 @@
+
+3742 Problem:-
+You are given an m x n grid where each cell contains one of the values 0, 1, or 2. You are also given an integer k.
+You start from the top-left corner (0, 0) and want to reach the bottom-right corner (m - 1, n - 1) by moving only right or down.
+Each cell contributes a specific score and incurs an associated cost, according to their cell values:
+0: adds 0 to your score and costs 0.
+1: adds 1 to your score and costs 1.
+2: adds 2 to your score and costs 1. 
+Return the maximum score achievable without exceeding a total cost of k, or -1 if no valid path exists.
+Note: If you reach the last cell but the total cost exceeds k, the path is invalid.
+
+Example 1:
+Input: grid = [[0, 1],[2, 0]], k = 1
+Output: 2
+Explanation:
+The optimal path is:
+Cell	grid[i][j]	Score	Total
+Score	Cost	Total
+Cost
+(0, 0)	0	0	0	0	0
+(1, 0)	2	2	2	1	1
+(1, 1)	0	0	2	0	1
+Thus, the maximum possible score is 2.
+
+Example 2:
+Input: grid = [[0, 1],[1, 2]], k = 1
+Output: -1
+Explanation:
+There is no path that reaches cell (1, 1) without exceeding cost k. Thus, the answer is -1.
+
+Constraints:
+1 <= m, n <= 200
+0 <= k <= 103
+grid[0][0] == 0
+0 <= grid[i][j] <= 2
+
+=================================================================================================================================================================
+
+Solution:-
+
+Intuition :-
+Hey LeetCoders! 👋 This problem screams "find the best path," so your first thought might be Dijkstra or a Priority Queue (PQ). This is a trap! 🛑
+The problem isn't just finding one best path. We need themaximum score for a limited cost (k). A path with a high score might use up all our cost, while a path with a lower score might leave us enough cost to finish.
+We need to track the best score for every possible cost at every cell. This is a perfect job for Dynamic Programming!
+🤔 Why Not a Priority Queue (Dijkstra)? ➡️ TLE!
+This is the key trap! A standard Dijkstra finds the single shortest path (e.g., minimum cost).
+To make Dijkstra work, your "state" can't just be (r, c). The state must be (r, c, cost).This gives M×N×K possible states.Running Dijkstra on M×N×K states gives a complexity of O(M⋅N⋅K⋅log(M⋅N⋅K)).
+Our DP solution is O(M⋅N⋅K) (3 nested loops).
+The DP is faster and avoids the extra log factor. A PQ-based solution is just a slower, over-complicated version of this DP and will likely Time Limit Exceed (TLE).
+
+Approach :-
+🧠 The Core Idea: State must be (row, col, cost) :
+A simple dp[r][c] = max_score won't work. Why? Imagine you reach cell (5, 5) in two ways:
+Path A: score = 20, cost = 8
+Path B: score = 15, cost = 5
+A simple DP or PQ might discard Path B because its score is lower. But if k = 9, Path A is a dead end (it can't afford any more cost=1 cells), while Path B might be the only one that can reach the finish line!
+So, our DP state must include the cost: dp[r][c][cost] = The maximum score to reach cell (r, c) using exactly cost.
+Our DP table will be dp[m][n][k+1], initialized to -1 (meaning "unreachable").
+
+📜 The Logic (Step-by-Step):
+Cost/Score Helpers: First, let's map the grid values:
+val 0: score = 0, cost = 0
+val 1: score = 1, cost = 1
+val 2: score = 2, cost = 1
+
+Initialization: Set dp[0][0][0] = 0. The problem guarantees grid[0][0] == 0, so we start at (0, 0) with 0 score and 0 cost.
+Iterate (Push DP): We'll loop through every cell (r, c) and every possible cost from 0 to k.
+for r from 0 to m-1
+for c from 0 to n-1
+for cost from 0 to k
+Check Reachability: If dp[r][c][cost] == -1, it means we can't reach this state (r, c, cost). We continue and check the next state.
+Transitions (Move Down & Right): If dp[r][c][cost] is reachable, it means we have a valid path. Let's see where we can go from here:
+Try Moving Down (to r+1, c):
+If r+1 < m (we're not at the bottom row):
+Get the cell_score and cell_cost from grid[r+1][c].
+new_cost = cost + cell_cost
+new_score = dp[r][c][cost] + cell_score
+If new_cost <= k (we can afford this move):
+Update the neighbor's state: dp[r+1][c][new_cost] = max(dp[r+1][c][new_cost], new_score)
+Try Moving Right (to r, c+1):
+If c+1 < n (we're not at the rightmost column):
+Do the same logic: calculate new_cost and new_score.
+If new_cost <= k:
+Update the neighbor's state: dp[r][c+1][new_cost] = max(dp[r][c+1][new_cost], new_score)
+Find Final Answer: After our loops finish, the DP table is full. The answer is the maximum score at the bottom-right cell (m-1, n-1) across any possible cost from 0 to k.
+max_score = max(dp[m-1][n-1][0...k])
+If max_score is still -1, we never reached the end. Return -1.
+
+Complexity :-
+Time complexity: O(M⋅N⋅K)
+We have 3 nested loops: m (rows), n (cols), and k (costs). Inside the loops, we do O(1) work (checking two neighbors).
+Space complexity: O(M⋅N⋅K)
+We need the 3D dp table to store the max score for each state (r, c, cost).
+
+Code :-
+class Solution {
+    public int maxPathScore(int[][] grid, int k) {
+        int m = grid.length, n = grid[0].length;
+
+        int[] scoreAdd = {0, 1, 2};
+        int[] costAdd = {0, 1, 1};
+
+        // dp[i][j][c] = max score at (i, j) with cost c
+        int[][][] dp = new int[m][n][k + 1];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                for (int c = 0; c <= k; c++)
+                    dp[i][j][c] = -1;
+
+        dp[0][0][0] = 0;
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                for (int costUsed = 0; costUsed <= k; costUsed++) {
+                    if (dp[i][j][costUsed] == -1) continue;
+                    int curScore = dp[i][j][costUsed];
+
+                    // Move DOWN
+                    if (i + 1 < m) {
+                        int nc = costUsed + costAdd[grid[i+1][j]];
+                        if (nc <= k) {
+                            int ns = curScore + scoreAdd[grid[i+1][j]];
+                            dp[i+1][j][nc] = Math.max(dp[i+1][j][nc], ns);
+                        }
+                    }
+
+                    // Move RIGHT
+                    if (j + 1 < n) {
+                        int nc = costUsed + costAdd[grid[i][j+1]];
+                        if (nc <= k) {
+                            int ns = curScore + scoreAdd[grid[i][j+1]];
+                            dp[i][j+1][nc] = Math.max(dp[i][j+1][nc], ns);
+                        }
+                    }
+                }
+            }
+        }
+
+        int best = -1;
+        for (int c = 0; c <= k; c++) {
+            best = Math.max(best, dp[m-1][n-1][c]);
+        }
+        return best;
+    }
+}
+
