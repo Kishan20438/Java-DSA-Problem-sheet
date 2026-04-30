@@ -1,4 +1,4 @@
-  
+   
 3742 Problem:-
 You are given an m x n grid where each cell contains one of the values 0, 1, or 2. You are also given an integer k.
 You start from the top-left corner (0, 0) and want to reach the bottom-right corner (m - 1, n - 1) by moving only right or down.
