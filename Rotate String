@@ -1,0 +1,53 @@
+
+796 Problem :-
+Given two strings s and goal, return true if and only if s can become goal after some number of shifts on s.
+A shift on s consists of moving the leftmost character of s to the rightmost position.
+For example, if s = "abcde", then it will be "bcdea" after one shift.
+ 
+Example 1:
+Input: s = "abcde", goal = "cdeab"
+Output: true
+
+Example 2:
+Input: s = "abcde", goal = "abced"
+Output: false
+ 
+Constraints:
+1 <= s.length, goal.length <= 100
+s and goal consist of lowercase English letters.
+ 
+===========================================================================================================================================================================
+
+Solution:-
+Intuition
+At first, I thought of simulating the shifts one by one (moving the first character to the end). But that approach feels repetitive and unnecessary.
+Then I noticed a pattern:
+If we take the string s and concatenate it with itself (s + s), all possible rotations of s will appear inside this new string.
+So instead of manually shifting, we can simply check if goal exists as a substring of s + s.
+
+Approach
+First, check if both strings have the same length.
+If not, it's impossible to form goal by rotation.
+Create a new string:
+word = s + s
+Iterate through word and check all substrings of length s.length().
+Each substring represents a possible rotation of s.
+If any substring matches goal, return true.
+If no match is found, return false.
+
+Complexity
+Time complexity: - O(n²)
+(We check n substrings and each comparison takes up to n time)
+Space complexity: - O(n)
+(For storing the concatenated string s + s)
+
+Code :-
+class Solution {
+    public boolean rotateString(String s, String goal) {
+        if (s.length() != goal.length()) return false;
+
+        String doubled = s + s;
+
+        return doubled.contains(goal);
+    }
+}
