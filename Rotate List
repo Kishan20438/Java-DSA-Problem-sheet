@@ -1,0 +1,65 @@
+
+61 Problem :-
+Given the head of a linked list, rotate the list to the right by k places.
+
+Example 1:
+Input: head = [1,2,3,4,5], k = 2
+Output: [4,5,1,2,3]
+
+Example 2:
+Input: head = [0,1,2], k = 4
+Output: [2,0,1]
+ 
+Constraints:
+The number of nodes in the list is in the range [0, 500].
+-100 <= Node.val <= 100
+0 <= k <= 2 * 109
+
+============================================================================================================================≠=========
+
+Solution:-
+Intuition
+To rotate the linked list to the right by k places, we need to move the last k nodes to the front.
+Instead of shifting nodes one by one (which would be inefficient), we can:
+Find the length of the list
+Convert it into a circular linked list
+Break the list at the correct position to form the rotated list
+
+Approach
+Traverse the list to find its length (len) and the last node (tail).
+Connect the tail to the head → making the list circular.
+Compute effective rotations using:
+k = k % len
+Find the new tail:
+The node after the new tail becomes the new head.
+Break the circular link by setting:
+newTail->next = NULL
+
+Complexity
+Time complexity:O(n)
+Space complexity:O(1)
+
+Code :-
+class Solution{
+    public ListNode rotateRight(ListNode head,int k){
+        if(head==null||head.next==null||k==0) return head; // edge
+
+        int len=1;
+        ListNode tail=head;
+        while(tail.next!=null){ tail=tail.next; len++; } 
+
+        k%=len;
+        if(k==0) return head; 
+
+        tail.next=head; // circular
+
+        int steps=len-k;
+        ListNode newtail=head;
+        for(int i=1;i<steps;i++) newtail=newtail.next; 
+
+        ListNode newhead=newtail.next; // head
+        newtail.next=null;
+
+        return newhead;
+    }
+}
